@@ -1,5 +1,5 @@
 ---
-title: "Moms & Babies Baseline Data"
+title: "Moms & Babies Instacart Initiative"
 author: "Sarah Albalawi"
 date: last-modified
 format: 
@@ -13,9 +13,9 @@ format:
     date-format: iso
     theme: default  
 ---
-  
+
 # R Setup {.unnumbered}
-  
+
 ```{r}
 #| message: false
 #| warning: false
@@ -46,8 +46,6 @@ library(tidyverse)
 theme_set(theme_bw()) 
 ```
 
-
-
 ## Loading the demographic Data {.unnumbered}
 
 ```{r}
@@ -62,8 +60,6 @@ demo_raw <- read_csv("CC_DEMO.csv", show_col_types = FALSE) |>
 dim(demo_raw)
 
 ```
-
-
 
 ## Loading the Baseline Data {.unnumbered}
 
@@ -80,8 +76,6 @@ dim(base_raw)
 
 ```
 
-
-
 ## Join Baseline with Demographic Data
 
 ```{r}
@@ -91,10 +85,7 @@ mab_raw <- left_join(demo_raw, base_raw, by = "record_id") |>
 
 ```
 
-
-  
-
-# Data Cleaning 
+# Data Cleaning
 
 ```{r}
 
@@ -186,7 +177,6 @@ mab_clean <- mab_raw |>
 
 ```
 
-
 ```{r}
  
 mab_clean <- mab_clean |> 
@@ -197,9 +187,7 @@ mab_clean <- mab_clean |>
   
 ```
 
-
-
-# Saving Cleaned Data 
+# Saving Cleaned Data
 
 ## Save `mab_clean` in RDS Format as `mab_data`
 
@@ -209,7 +197,6 @@ write_rds(mab_clean,"mab_data.Rds")
 
 ```
 
-
 ## Save `mab_clean` in CSV Format as `mab_data`
 
 ```{r}
@@ -217,9 +204,6 @@ write_rds(mab_clean,"mab_data.Rds")
 write.csv(mab_clean, file = "mab_data.csv")
 
 ```
-
-
-
 
 # Data Summaries
 
@@ -257,8 +241,6 @@ demo_summary |>
 
 ```
 
-
-
 # Visualize Demographics of population
 
 ## Race
@@ -286,7 +268,6 @@ labs(title = "Participants' Race",
 
 ```
 
-
 ## Marital Status
 
 ```{r}
@@ -311,8 +292,7 @@ labs(title = "Marital Status",
 
 ```
 
-
-## Education 
+## Education
 
 ```{r}
 
@@ -336,7 +316,6 @@ labs(title = "Educational Level",
          caption = "Number of participants: 129")
 
 ```
-
 
 ## Income
 
@@ -362,7 +341,6 @@ labs(title = "Income Level",
 
 ```
 
-
 ## Household Size
 
 ```{r}
@@ -386,7 +364,6 @@ labs(title = "Household Size",
          caption = "Number of participants: 129")
 
 ```
-
 
 ## Healthy Weight Status
 
@@ -412,7 +389,6 @@ labs(title = "Healthy Weight Status",
 
 ```
 
-
 ## Home Meal Frequency
 
 ```{r}
@@ -436,7 +412,6 @@ labs(title = "Home Meal Frequency",
          caption = "Number of participants: 129")
 
 ```
-
 
 ## Produce Consumption
 
@@ -462,7 +437,6 @@ labs(title = "Produce Consumption",
 
 ```
 
-
 ## Fast Food Consumption
 
 ```{r}
@@ -486,7 +460,6 @@ labs(title = "Fast Food Consumption",
          caption = "Number of participants: 129")
 
 ```
-
 
 ## Baby Feeding Method
 
@@ -512,7 +485,6 @@ labs(title = "Baby Feeding Method",
 
 ```
 
-
 ## Pregnancy Status
 
 ```{r}
@@ -536,7 +508,6 @@ labs(title = "Pregnancy Status",
          caption = "Number of participants: 129")
 
 ```
-
 
 ## Chronic Disease Status
 
@@ -562,8 +533,6 @@ labs(title = "Chronic Disease Status",
 
 ```
 
-
-
 # Session Information
 
 ```{r}
@@ -571,5 +540,3 @@ labs(title = "Chronic Disease Status",
 sessionInfo()
 
 ```
-
-

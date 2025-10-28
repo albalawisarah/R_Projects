@@ -1,5 +1,5 @@
 ---
-title: "CHR 2023 Diabetes Prevalence and Social Associations"
+title: "Diabetes Prevalence and Social Associations"
 subtitle: "Among 441 counties from six states (California, Colorado, Indiana, Mississippi, New York, and Ohio)"
 author: "Sarah Albalawi & Gazi Amena Noor Shamita"
 date: last-modified
@@ -12,8 +12,6 @@ format:
     code-overflow: wrap
     theme: default
 ---
-
-
 
 # R Packages
 
@@ -38,16 +36,10 @@ library(mosaic)
 library(tidyverse)
 
 
-url_boost <- "https://raw.githubusercontent.com/THOMASELOVE/431-data/main/data-and-code/Love-boost.R"
-
-source(url_boost) 
-
-
 theme_set(theme_bw())
 
 
 ```
-
 
 # Data Ingest
 
@@ -63,7 +55,6 @@ chr_2023_raw <- chr_2023_raw |>
 
 dim(chr_2023_raw)
 ```
-
 
 # State Selection
 
@@ -81,17 +72,15 @@ dim(chr_2023)
 chr_2023 |> count(state)
 ```
 
-Our study sample 'chr_2023' includes 6 states with a total of 441 counties. 
+Our study sample 'chr_2023' includes 6 states with a total of 441 counties.
 
 ```{r}
 describe(chr_2023$county)
 ```
 
-
-
 # Variable Selection
 
-The variables selected are Diabetes Prevalence `v060`, High School Completion `v168`, Insufficient Sleep `v143`, Premature Age-Adjusted Mortality `v127`, and Social Associations `v140`. 
+The variables selected are Diabetes Prevalence `v060`, High School Completion `v168`, Insufficient Sleep `v143`, Premature Age-Adjusted Mortality `v127`, and Social Associations `v140`.
 
 ```{r}
 chr_2023 <- chr_2023 |>
@@ -99,8 +88,6 @@ chr_2023 <- chr_2023 |>
          v060_rawvalue, v140_rawvalue, v168_rawvalue, 
          v143_rawvalue, v127_rawvalue)
 ```
-
-
 
 Here, we will multiply the three variables `v060, v168, and v143` that describe proportions by 100 to obtain percentages, which are easier to understand.
 
@@ -114,32 +101,29 @@ chr_2023 <- chr_2023 |>
          membershp_assocn = v140_rawvalue)
 ```
 
-
-Now we will check our variables. 
+Now we will check our variables.
 
 # Variable Cleaning and Renaming
 
-Initial Name | New Name | Role | Description
------------: | -----------: | ---------- | -------------------------------------------
-`v060_rawvalue` | `Diabet_prev` | A1 outcome | Diabetes Prevalence: Percentage of adults aged 20 and above with diagnosed diabetes (age-adjusted)
-`v140_rawvalue` | `membershp_assocn` | A1 predictor | Social Associations: The count of membership associations for every 10,000 people in the population.
-`v127_rawvalue` | `adj_pre_mort` | A2 outcome | Premature Age-Adjusted Mortality: Number of deaths among residents under age 75 per 100,000 population (age-adjusted)
-`v168_rawvalue` | `Highschl_complet` | A2 predictor | High School Completion:   Percentage of adults aged 25 and older who have completed high school or obtained an equivalent qualification.
-`v143_rawvalue` | `insuff_sleep` | A3 outcome | Insufficient Sleep: % of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018.```{r}
-
+| Initial Name | New Name | Role | Description |
+|---------------:|---------------:|----------------|-------------------------|
+| `v060_rawvalue` | `Diabet_prev` | A1 outcome | Diabetes Prevalence: Percentage of adults aged 20 and above with diagnosed diabetes (age-adjusted) |
+| `v140_rawvalue` | `membershp_assocn` | A1 predictor | Social Associations: The count of membership associations for every 10,000 people in the population. |
+| `v127_rawvalue` | `adj_pre_mort` | A2 outcome | Premature Age-Adjusted Mortality: Number of deaths among residents under age 75 per 100,000 population (age-adjusted) |
+| `v168_rawvalue` | `Highschl_complet` | A2 predictor | High School Completion: Percentage of adults aged 25 and older who have completed high school or obtained an equivalent qualification. |
+| `v143_rawvalue` | `insuff_sleep` | A3 outcome | Insufficient Sleep: % of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018.|
 
 At this stage we have 441 counties and 9 variables.
 
 ```{r}
 dim(chr_2023)
 ```
-Our 9 variables are presented by this code: 
+
+Our 9 variables are presented by this code:
 
 ```{r}
 names(chr_2023)
 ```
- 
-
 
 # Creating the Analysis 2 Predictor
 
@@ -150,6 +134,7 @@ chr_2023 |>
   summarise(q40 = quantile(Highschl_complet, c(0.4)),
             q60 = quantile(Highschl_complet, c(0.6)))
 ```
+
 So we will create a three-level variable where values of `88.2` and lower will fall in the `Low` group, and values of `90.1` and higher will fall in the `High` group.
 
 ```{r}
@@ -163,8 +148,6 @@ chr_2023 |> count(Highschl_complet_grp)
 ```
 
 Here we have about 40% of our subjects in the High group and about 40% in the Low group, with the rest now listed as missing, and the `Highschl_complet_grp` variable is now a factor, so that should be acceptable.
-
-
 
 # Adding 2018 Data for the Analysis 3 Outcome
 
@@ -189,7 +172,7 @@ chr_2018 <- chr_2018_raw |>
   select(fipscode, v143_rawvalue)
 ```
 
-we will convert the `v143_rawvalue` which is a proportion into a percentage to keep it consistent with the rest of the variables. 
+we will convert the `v143_rawvalue` which is a proportion into a percentage to keep it consistent with the rest of the variables.
 
 ```{r}
 chr_2018 <- chr_2018 |>
@@ -197,7 +180,7 @@ chr_2018 <- chr_2018 |>
          .keep = "unused")
 ```
 
-Here we will convert `fipscode` variable from numeric to character from both `chr_2023` and `chr_2018` data sets. 
+Here we will convert `fipscode` variable from numeric to character from both `chr_2023` and `chr_2018` data sets.
 
 ```{r}
 chr_2023$fipscode <- as.character(as.numeric(chr_2023$fipscode))
@@ -219,8 +202,6 @@ chr_2023 <- chr_2023 |>
 
 ```
 
-
-
 # Arranging and Saving the Analytic Tibble
 
 ```{r}
@@ -235,15 +216,11 @@ chr_2023 <- chr_2023 |>
 write_rds(chr_2023, file = "FINAL_CHR2023_AP_SarahShamita.Rds")
 ```
 
-
-
 # Print the Tibble
 
 ```{r}
 chr_2023
 ```
-
-
 
 # Numerical Summaries
 
@@ -251,75 +228,53 @@ chr_2023
 describe(chr_2023)
 ```
 
-
-
-
 # The Codebook
+
 Our **chr_2023** tibble contains **441** counties and **11** variables.
 
-|         Variable         | Original |   Role    |                                        NA |                                                    Distinct | Definition | Year | Source                                                                                                                                                                                |
-|:------------------------:|:--------:|:---------:|------------------------------------------:|------------------------------------------------------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------|------|
-|       **fipscode**       |    --    |    ID     |             `r n_miss(chr_2023$fipscode)` |             `r n_distinct(chr_2023$fipscode, na.rm = TRUE)` | county's FIPS code |  NA |  NA                                                                                                                                                                       |
-|        **state**         |    --    |    ID     |                `r n_miss(chr_2023$state)` |                `r n_distinct(chr_2023$state, na.rm = TRUE)` | state postal abbreviation | NA |  NA                                                                                                                                                                |
-|        **county**        |    --    |    ID     |               `r n_miss(chr_2023$county)` |               `r n_distinct(chr_2023$county, na.rm = TRUE)` | county name |  NA |  NA                                                                                                                                                                        |
-|     **Diabet_Prev**      |  `v060`  |  A1 out   |          `r n_miss(chr_2023$Diabet_Prev)` |          `r n_distinct(chr_2023$Diabet_Prev, na.rm = TRUE)` | Diabetes prevalence: Percentage of adults aged 20 and above with diagnosed diabetes (age-adjusted) | 2020 | Behavioral Risk Factor Surveillance System (BRFSS)                                                                                  |
-|   **membershp_assocn**   |  `v140`  |  A1 pre   |     `r n_miss(chr_2023$membershp_assocn)` |     `r n_distinct(chr_2023$membershp_assocn, na.rm = TRUE)` | Social associations: The count of membership associations for every 10,000 people in the population. | 2020 | County Business Patterns                                                                               |
-|     **adj_pre_mort**     |  `v127`  |  A2 out   |         `r n_miss(chr_2023$adj_pre_mort)` |         `r n_distinct(chr_2023$adj_pre_mort, na.rm = TRUE)` | Premature Age-Adjusted Mortality: Number of deaths among residents under age 75 per 100,000 population (age-adjusted)  | 2018- 2020| National Center for Health Statistics - Mortality Files                                                |
-| **Highschl_complet_grp** |  `v168`  |  A2 pre   | `r n_miss(chr_2023$Highschl_complet_grp)` | `r n_distinct(chr_2023$Highschl_complet_grp, na.rm = TRUE)` | High school completion: The percentage of adults aged 25 and older who have completed high school or obtained an equivalent qualification. ( Low is $\leq$ 88.2%, High is $\geq$ 90.1% ) |2017- 2021 | American Community Survey, 5-year estimates  
-|   **Highschl_complet**   |  `v168`  |   Var 4   |     `r n_miss(chr_2023$Highschl_complet)` |     `r n_distinct(chr_2023$Highschl_complet, na.rm = TRUE)` | Quantitative version of high school completion   | 2017- 2021 | American Community Survey, 5-year estimates                                                                                                                                        |
-|  **insuff_sleep_2023**   |  `v143`  | A3 (2023) |    `r n_miss(chr_2023$insuff_sleep_2023)` |    `r n_distinct(chr_2023$insuff_sleep_2023, na.rm = TRUE)` | Insufficient sleep: Percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2023 |  2020 |  Behavioral Risk Factor Surveillance System (BRFSS)                                                                   |
-|  **insuff_sleep_2018**   |  `v143`  | A3 (2018) |    `r n_miss(chr_2023$insuff_sleep_2018)` |    `r n_distinct(chr_2023$insuff_sleep_2018, na.rm = TRUE)` | Insufficient sleep: Percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018  | 2016 | Behavioral Risk Factor Surveillance System (BRFSS)                                                                     |
-|    **county_ranked**     |    --    |   Check   |        `r n_miss(chr_2023$county_ranked)` |        `r n_distinct(chr_2023$county_ranked, na.rm = TRUE)` | all values are 1   | NA | NA                                                                                                                                                                      |
+| Variable | Original | Role | NA | Distinct | Definition | Year | Source |
+|:-------:|:-------:|:-------:|--------:|--------:|---------|---------|---------|
+| **fipscode** | -- | ID | `r n_miss(chr_2023$fipscode)` | `r n_distinct(chr_2023$fipscode, na.rm = TRUE)` | county's FIPS code | NA | NA |
+| **state** | -- | ID | `r n_miss(chr_2023$state)` | `r n_distinct(chr_2023$state, na.rm = TRUE)` | state postal abbreviation | NA | NA |
+| **county** | -- | ID | `r n_miss(chr_2023$county)` | `r n_distinct(chr_2023$county, na.rm = TRUE)` | county name | NA | NA |
+| **Diabet_Prev** | `v060` | A1 out | `r n_miss(chr_2023$Diabet_Prev)` | `r n_distinct(chr_2023$Diabet_Prev, na.rm = TRUE)` | Diabetes prevalence: Percentage of adults aged 20 and above with diagnosed diabetes (age-adjusted) | 2020 | Behavioral Risk Factor Surveillance System (BRFSS) |
+| **membershp_assocn** | `v140` | A1 pre | `r n_miss(chr_2023$membershp_assocn)` | `r n_distinct(chr_2023$membershp_assocn, na.rm = TRUE)` | Social associations: The count of membership associations for every 10,000 people in the population. | 2020 | County Business Patterns |
+| **adj_pre_mort** | `v127` | A2 out | `r n_miss(chr_2023$adj_pre_mort)` | `r n_distinct(chr_2023$adj_pre_mort, na.rm = TRUE)` | Premature Age-Adjusted Mortality: Number of deaths among residents under age 75 per 100,000 population (age-adjusted) | 2018- 2020 | National Center for Health Statistics - Mortality Files |
+| **Highschl_complet_grp** | `v168` | A2 pre | `r n_miss(chr_2023$Highschl_complet_grp)` | `r n_distinct(chr_2023$Highschl_complet_grp, na.rm = TRUE)` | High school completion: The percentage of adults aged 25 and older who have completed high school or obtained an equivalent qualification. ( Low is $\leq$ 88.2%, High is $\geq$ 90.1% ) | 2017- 2021 | American Community Survey, 5-year estimates |
+| **Highschl_complet** | `v168` | Var 4 | `r n_miss(chr_2023$Highschl_complet)` | `r n_distinct(chr_2023$Highschl_complet, na.rm = TRUE)` | Quantitative version of high school completion | 2017- 2021 | American Community Survey, 5-year estimates |
+| **insuff_sleep_2023** | `v143` | A3 (2023) | `r n_miss(chr_2023$insuff_sleep_2023)` | `r n_distinct(chr_2023$insuff_sleep_2023, na.rm = TRUE)` | Insufficient sleep: Percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2023 | 2020 | Behavioral Risk Factor Surveillance System (BRFSS) |
+| **insuff_sleep_2018** | `v143` | A3 (2018) | `r n_miss(chr_2023$insuff_sleep_2018)` | `r n_distinct(chr_2023$insuff_sleep_2018, na.rm = TRUE)` | Insufficient sleep: Percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018 | 2016 | Behavioral Risk Factor Surveillance System (BRFSS) |
+| **county_ranked** | -- | Check | `r n_miss(chr_2023$county_ranked)` | `r n_distinct(chr_2023$county_ranked, na.rm = TRUE)` | all values are 1 | NA | NA |
 
 **Missingness Check** We have no quantitative variables missing more than 3 of our 441 counties (0.6%) which is less than Project A's limit of 20%.
 
 **Distinct Values Check** We have at least 99 distinct values in each of our quantitative variables, which is much larger than the minimum count (15) for Project A.
 
-
-
-
-
-
-
-
-
 # Research Questions
-
-
 
 ## Analysis 1 Research Question
 
-Does increased number of membership associations correlate with lower diabetes prevalence among adults in 441 counties across California, Colorado, Indiana, Mississippi, New York, and Ohio? 
+Does increased number of membership associations correlate with lower diabetes prevalence among adults in 441 counties across California, Colorado, Indiana, Mississippi, New York, and Ohio?
 
 The interpersonal and social environments significantly influence an individual's likelihood of developing chronic diseases, including diabetes. This analysis aims to examine the potential inverse relationship between the number of social associations (measured as membership associations per 10,000 people) and diabetes prevalence among adults in the US population.
 
-
 ## Analysis 2 Research Question
 
-Can we predict meaningful differences in premature age-adjusted mortality, which measures the number of deaths among residents under age 75 per 100,000 population, based on two levels (high and low) of secondary education in 441 counties across California, Colorado, Indiana, Mississippi, New York, and Ohio? 
+Can we predict meaningful differences in premature age-adjusted mortality, which measures the number of deaths among residents under age 75 per 100,000 population, based on two levels (high and low) of secondary education in 441 counties across California, Colorado, Indiana, Mississippi, New York, and Ohio?
 
 This analysis seeks to determine whether higher levels of secondary education in counties are associated with lower premature mortality rates, potentially providing a tool to address disparities in US populations' health.
-
 
 ## Analysis 3 Research Question
 
 Are there meaningful differences in the quantity of sleep between the time periods before COVID-19 pandemic (2018) and after COVID-19 (2023) for 441 counties in the states of California, Colorado, Indiana, Mississippi, New York, and Ohio?
 
-COVID-19 caused world-wide changes in health behaviors across various levels. This analysis aims to explore possible shifts in health behaviors (specifically sleep insufficiency) across the US population before the pandemic (2018) and after the pandemic (2023). 
-
-
-
-
-
-
+COVID-19 caused world-wide changes in health behaviors across various levels. This analysis aims to explore possible shifts in health behaviors (specifically sleep insufficiency) across the US population before the pandemic (2018) and after the pandemic (2023).
 
 # Analysis 1
 
-
-## variables 
+## variables
 
 Our research sample comprises 441 counties from six states (California, Colorado, Indiana, Mississippi, New York, and Ohio). The first research question investigates the possible impact of membership associations on diabetes prevalence among these counties.
-
 
 The outcome is 'Diabetes Prevalence' which is the percentage of adults above 20 years of age diagnosed with diabetes and the predictor is 'membership association' which is the number of membership associations for every 10,000 people in the population.
 
@@ -334,11 +289,10 @@ dim(Analysis_1)
 
 
 ```
-We have 348 counties with complete data on both membership association and diabetes prevalence. 
 
+We have 348 counties with complete data on both membership association and diabetes prevalence.
 
-
-The values of the outcome and predictor for Cuyahoga County, in Ohio: 
+The values of the outcome and predictor for Cuyahoga County, in Ohio:
 
 ```{r}
 Analysis_1_Cuyahoga <- chr_2023 |>
@@ -348,15 +302,14 @@ Analysis_1_Cuyahoga <- chr_2023 |>
 
 tibble::glimpse(Analysis_1_Cuyahoga)
 ```
-In Cuyahoga county, the prevalence of diabetes is 11.3 % and the the number of membership associations is 9.13 for every 10,000 individual in the population. 
 
-
+In Cuyahoga county, the prevalence of diabetes is 11.3 % and the the number of membership associations is 9.13 for every 10,000 individual in the population.
 
 ## Summaries
 
 ### Graphical Summaries of the Outcome-Predictor Association
 
-We will start by exploring our data set before any transformations. 
+We will start by exploring our data set before any transformations.
 
 ```{r}
 
@@ -373,8 +326,8 @@ ggplot(data = Analysis_1, aes(x = membershp_assocn, y = Diabet_Prev)) +
                     round_half_up(cor(Analysis_1$Diabet_Prev, Analysis_1$membershp_assocn),3)))
 
 ```
-The relationship between the number of membership associations per 10,000 individuals and the prevalence of diabetes is slightly positive. The relationship is not perfectly linear nor are the values strongly clustered around the fitted line. This observation is reflected by the low pearson correlation (0.063). The loes smooth shows a strong indication that the data is non linear. We can also observe many outliers scattered around the plot which indicates that many counties could not be fit in this simple linear model. 
 
+The relationship between the number of membership associations per 10,000 individuals and the prevalence of diabetes is slightly positive. The relationship is not perfectly linear nor are the values strongly clustered around the fitted line. This observation is reflected by the low pearson correlation (0.063). The loes smooth shows a strong indication that the data is non linear. We can also observe many outliers scattered around the plot which indicates that many counties could not be fit in this simple linear model.
 
 ```{r}
 Analysis_1temp <- Analysis_1 |>
@@ -399,9 +352,8 @@ ggplot(data = Analysis_1, aes(x = membershp_assocn, y = Diabet_Prev)) +
 
 
 ```
-This graph shows some of the problematic outliers in this data set. 
 
-
+This graph shows some of the problematic outliers in this data set.
 
 Now we will observe any improvements in the fitting of our model after transforming the outcome using three different transformations.
 
@@ -428,7 +380,6 @@ p1 + p2
 
 ```
 
-
 Second, we will try the logarithm transformation.
 
 ```{r}
@@ -451,8 +402,6 @@ p2 <- ggplot(Analysis_1, aes(x = membershp_assocn, y = log(Diabet_Prev))) +
 p1 + p2
 
 ```
-
-
 
 Finally, we will try the inverse transformation.
 
@@ -477,14 +426,11 @@ p1 + p2
 
 ```
 
-
-Unfortunately, none of the transformations was successful in producing a better fit for our simple linear regression. We will use the our original linear model without transformations. 
-
-
+Unfortunately, none of the transformations was successful in producing a better fit for our simple linear regression. We will use the our original linear model without transformations.
 
 ### Graphical summary of the outcome distribution
 
-We will assess the distribution of our outcome (Diabetes Prevalence) which is the variable (Diabet_Prev) using three plots: a normal Q-Q plot, a histogram, and a boxplot. 
+We will assess the distribution of our outcome (Diabetes Prevalence) which is the variable (Diabet_Prev) using three plots: a normal Q-Q plot, a histogram, and a boxplot.
 
 ```{r}
 ## Normal Q-Q plot
@@ -529,16 +475,13 @@ p1 + (p2 / p3 + plot_layout(heights = c(4,1))) +
 
 We can safely conclude that the outcome distribution is not normal but skewed (right skew) due to many outliers (counties with remarkably high prevalence of Diabetes among adults compared to the sample).
 
-
 The counties that have been identified as outliers with the highest prevalence of diabetes:
 
 ```{r}
 Analysis_1 |> arrange(desc(Diabet_Prev)) |> head(5)
 ```
 
-
-
-### Numerical Summaries 
+### Numerical Summaries
 
 ```{r}
 key1 <- 
@@ -551,9 +494,7 @@ key1 <-
 key1 |>  kbl(digits = 3) |> kable_styling()
 ```
 
-This sample does not have any missing values. 
-
-
+This sample does not have any missing values.
 
 ## Approach
 
@@ -580,14 +521,11 @@ round_half_up(coef(lm(Analysis_1$Diabet_Prev ~ Analysis_1$membershp_assocn))[2],
          
 ```
 
-
 ```{r}
 A1_linear <- lm(Diabet_Prev ~ membershp_assocn, data = Analysis_1)
 
 summary(A1_linear)
 ```
-
-
 
 ```{r}
 A1_linear <- lm(Diabet_Prev ~ membershp_assocn, data = Analysis_1)
@@ -603,10 +541,6 @@ glance(A1_linear) |>
 
 The fitted model equation is **Diabet_Prev = 10.04 + 0.04 membershp_assocn**. We fit the model to all 348 observations, obtaining a model R squared value of 0.39% and a residual standard deviation of 2.403. It is almost the same as the initial standard deviation of the Diabet_Prev values (2.404) from our earlier numerical summaries.
 
-
-
-
-
 ```{r}
 Analysis_1_Residual <- lm(Diabet_Prev ~ membershp_assocn, data = Analysis_1)
 
@@ -614,13 +548,9 @@ par(mfrow = c(1,2)); plot(Analysis_1_Residual, which = 1:2); par(mfrow = c(1,1))
 
 ```
 
+The scatter plot on the left is the residuals vs fit plot for the data set's simple linear regression model with diabetes prevalence as the outcome and the number of membership association per 10,000 people as the predictor. In this plot, the residuals (estimated error) are plotted on the y axis and fitted values (observed outcome) on the x axis. It asses the linearity of the data, presence of unequal error variances, and outliers. As we can see the data points are clustered around the middle rather than being spread around the horizontal line. This suggests that the relationship is non linear. The spread of the data points are unequal which indicates unequal error variance. At the bottom left, there is a residual that stands out compared to the pattern of the majority of the residuals, which can be considered an outlier.
 
-The scatter plot on the left is the residuals vs fit plot for the data set's simple linear regression model with diabetes prevalence as the outcome and the number of membership association per 10,000 people as the predictor. In this plot, the residuals (estimated error) are plotted on the y axis and fitted values (observed outcome) on the x axis. It asses the linearity of the data, presence of unequal error variances, and outliers. As we can see the data points are clustered around the middle rather than being spread around the horizontal line. This suggests that the relationship is non linear. The spread of the data points are unequal which indicates unequal error variance. At the bottom left, there is a residual that stands out compared to the pattern of the majority of the residuals, which can be considered an outlier.  
-
-
-The plot on the right shows a normal Q-Q plot which asses the data skew and model fit. The standardized residuals are plotted on the y axis and the theoretical quantiles are on the x axis. As we can see there is a large skew in the residuals where the points are drastically deviating from the dotted line. This indicates that the data are not normally distributed and that a linear model may not be a suitable method for fitting our sample. 
-
-
+The plot on the right shows a normal Q-Q plot which asses the data skew and model fit. The standardized residuals are plotted on the y axis and the theoretical quantiles are on the x axis. As we can see there is a large skew in the residuals where the points are drastically deviating from the dotted line. This indicates that the data are not normally distributed and that a linear model may not be a suitable method for fitting our sample.
 
 Now we will identify the two counties where the model we've fit was the least successful in predicting the outcome *(AKA the sample Outliers)*:
 
@@ -632,9 +562,7 @@ A1_aug |> slice(182, 183) |>
 
 ```
 
-
-
-Finally, we will display our model's prediction for our outcome (Diabetes Prevalence) for Cuyahoga County. 
+Finally, we will display our model's prediction for our outcome (Diabetes Prevalence) for Cuyahoga County.
 
 ```{r}
 Cuyahoga_predict <- predict(A1_linear, newdata = subset(chr_2023, county == "Cuyahoga County" & state == "OH"))
@@ -642,23 +570,16 @@ Cuyahoga_actual <- subset(chr_2023, county == "Cuyahoga County" & state == "OH")
 paste("Predicted Value for Cuyahoga County", Cuyahoga_predict)
 paste("Actual Value for Cuyahoga County", Cuyahoga_actual)
 ```
-The predicted value of the outcome (Diabetes Prevalence) for Cuyahoga County was 10.4, while the actual value of Diabetes Prevalence for Cuyahoga County was 11.3. 
 
-
+The predicted value of the outcome (Diabetes Prevalence) for Cuyahoga County was 10.4, while the actual value of Diabetes Prevalence for Cuyahoga County was 11.3.
 
 ## Conclusions
 
-Our research question was whether the number of membership associations was inversely associated with diabetes prevalence among 441 counties from six states ( California, Colorado, Indiana, Mississippi, New York, and Ohio). The simple linear regression model produced from this sample provided a unexpected answer. Number of membership associations per 10,000 people had a positive relationship with diabetes prevalence among adults in the sample counties. As opposed to our initial belief, increased number of membership associations increased diabetes prevalence. However, the strength of the association was very weak (pearson correlation= 0.063). From our results, we can tell that membership associations may not be the best predictor for diabetes prevalence among adults in US counties.  
+Our research question was whether the number of membership associations was inversely associated with diabetes prevalence among 441 counties from six states ( California, Colorado, Indiana, Mississippi, New York, and Ohio). The simple linear regression model produced from this sample provided a unexpected answer. Number of membership associations per 10,000 people had a positive relationship with diabetes prevalence among adults in the sample counties. As opposed to our initial belief, increased number of membership associations increased diabetes prevalence. However, the strength of the association was very weak (pearson correlation= 0.063). From our results, we can tell that membership associations may not be the best predictor for diabetes prevalence among adults in US counties.
 
-There some limitations to our work in Analysis 1. One of the major limitations is that the relationship between the variables is non linear. The distribution of the residuals was also not normal. Our sample does not follow the assumption of normality nor linearity which means that using a simple linear regression model may not be appropriate. In order to prove that, additional transformation should be done for the predictor. Another step would be to investigate the outliers and see whether they can be removed to improve the fit of our model. The sample counties were extracted from six randomly selected states. Stratifying the analysis by state can be another approach to yield better predictions.  
-
-
-
-
-
+There some limitations to our work in Analysis 1. One of the major limitations is that the relationship between the variables is non linear. The distribution of the residuals was also not normal. Our sample does not follow the assumption of normality nor linearity which means that using a simple linear regression model may not be appropriate. In order to prove that, additional transformation should be done for the predictor. Another step would be to investigate the outliers and see whether they can be removed to improve the fit of our model. The sample counties were extracted from six randomly selected states. Stratifying the analysis by state can be another approach to yield better predictions.
 
 # Analysis 2
-
 
 ## Variables
 
@@ -672,13 +593,11 @@ Predictor Variable:
 
 Level of Secondary Education (Highschl_complet_grp): This is our two-level predictor variable, which categorizes the counties into two groups based on the level of secondary education. The two levels are: High Secondary Education: Counties with a higher level of secondary education. Low Secondary Education: Counties with a lower level of secondary education. Our research is centered on understanding whether there are statistically significant differences in premature age-adjusted mortality rates between these two groups of counties. Such differences may indicate an association between secondary education and disparities in population health.
 
-There are no missing values for either the premature age-adjusted mortality or secondary education levels in our sample. Our original sample was composed of 441 counties from six randomly selected states. However, after dichotomizing our predictor (High school completion) into two levels (High and low), our current analysis sample was reduced to 351 counties.  
-
-
+There are no missing values for either the premature age-adjusted mortality or secondary education levels in our sample. Our original sample was composed of 441 counties from six randomly selected states. However, after dichotomizing our predictor (High school completion) into two levels (High and low), our current analysis sample was reduced to 351 counties.
 
 ## Summaries
 
-### sample prep 
+### sample prep
 
 We will create a sub sample for analysis 2 to include our predictor 'Highschl_complet_grp' with its two levels (High -low) and our outcome 'adj_pre_mort'.
 
@@ -691,9 +610,7 @@ tibble::glimpse(Analysis_2)
 
 ```
 
-Our sample size was reduced to 351 counties with complete data on both variables. 
-
-
+Our sample size was reduced to 351 counties with complete data on both variables.
 
 ### Distribution of the Outcome within Predictor Groups
 
@@ -712,16 +629,14 @@ ggplot(Analysis_2, aes(x = adj_pre_mort, y = Highschl_complet_grp)) +
        subtitle = "Among 351 US counties")
 
 ```
-The 'High' group of secondary education completion have a lower premature age-adjusted mortality median compared to the 'low' group. 
 
+The 'High' group of secondary education completion have a lower premature age-adjusted mortality median compared to the 'low' group.
 
-One of the counties with extreme premature age-adjusted mortality value despite being in the 'High' secondary education completion group is Alpine County in California. 
+One of the counties with extreme premature age-adjusted mortality value despite being in the 'High' secondary education completion group is Alpine County in California.
 
 ```{r}
 Analysis_2 |> arrange(desc(adj_pre_mort)) |> head(3)
 ```
-
-
 
 ```{r}
 # Visualization for Counties with High Secondary Education
@@ -742,9 +657,8 @@ p2 <- ggplot(
 
 p1 + p2
 ```
+
 Both populations are approximately normally distributed.
-
-
 
 ## Numerical Summary
 
@@ -756,11 +670,7 @@ key2 <- favstats(adj_pre_mort ~ Highschl_complet_grp, data = Analysis_2)
 key2 |> kbl(digits = 2) |> kable_styling()
 ```
 
-
-
-
 ## Approach
-
 
 ### 90% CI for difference in group means via t-based procedure
 
@@ -778,7 +688,6 @@ t.test(adj_pre_mort ~ Highschl_complet_grp, data = Analysis_2,
   kbl(digits = 3) |> kable_styling()
 ```
 
-
 The two sample t-test approach assumes equal variances.
 
 ```{r}
@@ -789,8 +698,6 @@ t.test(adj_pre_mort ~ Highschl_complet_grp, data = Analysis_2,var.equal = TRUE,
 
 ```
 
-
-
 Another way to get the "equal variances" in 90% confidence interval:
 
 ```{r}
@@ -800,22 +707,16 @@ tidy(m3, conf.int = TRUE, conf.level = 0.90) |>
   kbl(digits = 3) |> kable_styling()
 ```
 
-
-
 ### 90% CI for difference in group means via bootstrap
-
 
 ```{r}
 set.seed(4312023)
 bootdif(Analysis_2$adj_pre_mort, Analysis_2$ Highschl_complet_grp, conf.level = 0.90, B.reps = 2000)
 ```
 
-Our 90% bootstrap confidence interval for the difference in population means (High - low) in 'Highschl_complet_grp' is **(126.26, 168.00)** with a point estimate of **146.76**. The mean difference does not equal 0 and the range does not include 0. We can safely conclude that the level of secondary education completion is associated with premature age-adjusted mortality among our sample counties. 
+Our 90% bootstrap confidence interval for the difference in population means (High - low) in 'Highschl_complet_grp' is **(126.26, 168.00)** with a point estimate of **146.76**. The mean difference does not equal 0 and the range does not include 0. We can safely conclude that the level of secondary education completion is associated with premature age-adjusted mortality among our sample counties.
 
 The 'Low' group exhibited higher variance compared to the 'High' group. The presence of variance between the independent samples, along with the disparities between the groups, suggests that the predictor can significantly impact the outcome. Therefore, it is crucial to further examine the significance of the difference in premature age-adjusted mortality rates across secondary education completion classifications.
-
-
-
 
 ## Conclusions
 
@@ -823,20 +724,13 @@ In our investigation across 351 counties (originally 441) from from six randomly
 
 The results consistently affirm marked variations in premature age-adjusted mortality rates between 'High' and 'Low' counties. Yet, there are limitations to the analysis. Scrutiny is essential regarding assumptions behind interval selections, particularly concerning data normality and assumptions of equal variances. Furthermore, the representative of the selected states remains uncertain. For a more robust analysis, considering a more diverse and representative set of states or regions across the US, along with investigating additional factors such as healthcare access and socioeconomic conditions, could significantly enhance insights into these mortality rate disparities.
 
-
-
-
-
-
 # Analysis 3
 
 ## Variables
 
-In analysis 3, our outcome is the quantity of sleep (sleep insufficiency). The measurement is the percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted). The sample includes 441 counties from 6 states (California, Colorado, Indiana, Mississippi, New York, and Ohio). The outcome will be measured in two different time points before and after the COVID-19 pandemic (2018 and 2023) to evaluate the presence of any remarkable changes in sleep insufficiency among our study sample Pre and Post pandemic period. 
+In analysis 3, our outcome is the quantity of sleep (sleep insufficiency). The measurement is the percentage of adults who report fewer than 7 hours of sleep on average (age-adjusted). The sample includes 441 counties from 6 states (California, Colorado, Indiana, Mississippi, New York, and Ohio). The outcome will be measured in two different time points before and after the COVID-19 pandemic (2018 and 2023) to evaluate the presence of any remarkable changes in sleep insufficiency among our study sample Pre and Post pandemic period.
 
-The sleep insufficiency outcome is divided into two variables. The first variable is the 2018 sleep insufficiency '(insuff_sleep_2018)' which was collected from Behavioral Risk Factor Surveillance System in 2016. The second variable is the 2023 sleep insufficiency '(insuff_sleep_2023)' which was collected from the Behavioral Risk Factor Surveillance System in 2020. 
-
-
+The sleep insufficiency outcome is divided into two variables. The first variable is the 2018 sleep insufficiency '(insuff_sleep_2018)' which was collected from Behavioral Risk Factor Surveillance System in 2016. The second variable is the 2023 sleep insufficiency '(insuff_sleep_2023)' which was collected from the Behavioral Risk Factor Surveillance System in 2020.
 
 ## Summaries
 
@@ -851,10 +745,7 @@ Analysis_3 <- chr_2023 |>
 
 ```
 
-
-
-Second, we will add the a column calculating the paired difference between insufficient sleep in 2023 and insufficient sleep in 2018. 
-
+Second, we will add the a column calculating the paired difference between insufficient sleep in 2023 and insufficient sleep in 2018.
 
 ```{r}
 Org_Analysis_3 <- Analysis_3
@@ -866,13 +757,9 @@ Analysis_3
 
 ```
 
+### Distribution of the paired differences
 
-
-
-### Distribution of the paired differences 
-
-
-Now we will visualize our sample's distribution: 
+Now we will visualize our sample's distribution:
 
 ```{r}
 ## Normal Q-Q plot
@@ -916,8 +803,6 @@ p1 + (p2 / p3 + plot_layout(heights = c(4,1))) +
 
 ```
 
-
-
 ### How well did the pairing work for this sample?
 
 ```{r}
@@ -931,9 +816,8 @@ ggplot(Analysis_3, aes(x = insuff_sleep_2018, y = insuff_sleep_2023)) +
          caption = str_glue("Pearson correlation = ", round_half_up(cor(Analysis_3$insuff_sleep_2018, Analysis_3$insuff_sleep_2023),2)))
 
 ```
-As we can see, the plot displays a positive correlation between the 2018 and the 2023 samples with a strong Pearson correlation (0.86). This indicated that pairing worked well in reducing variation among our study sample. 
 
-
+As we can see, the plot displays a positive correlation between the 2018 and the 2023 samples with a strong Pearson correlation (0.86). This indicated that pairing worked well in reducing variation among our study sample.
 
 ### Numerical Summaries
 
@@ -948,12 +832,9 @@ key3 <- bind_rows(
 key3 |> kbl(digits = 3) |> kable_styling()
 ```
 
-
-
-
 ## Approach
 
-To determine which test is most appropriate for building the 90% CI for the population mean difference, we will need to observe the distribution of each sample. 
+To determine which test is most appropriate for building the 90% CI for the population mean difference, we will need to observe the distribution of each sample.
 
 First we will retrieve the original data and slightly change it to a 'Longer Format' to serve our purposes:
 
@@ -980,9 +861,8 @@ ggplot(Analysis_3_longer, aes(x = status, y = insufficient_sleep_percentage)) +
     labs(title = "Boxplot of Insufficient Sleep % among adults in 2023 and 2018",
          subtitle = "Sample includes 348 counties from 6 States") 
 ```
-    
- 
-Another useful visualization to asses the sample's distribution: 
+
+Another useful visualization to asses the sample's distribution:
 
 ```{r}
 ggplot(Analysis_3_longer, aes(x = insufficient_sleep_percentage, y = status, fill = status)) +
@@ -1001,11 +881,10 @@ mosaic::favstats(insufficient_sleep_percentage ~ status, data = Analysis_3_longe
     kbl(digits = 2) |> kable_styling()
 
 ```
- 
-We can conclude that the distribution of the paired difference and the separate samples are approximately normal with mild skew. The paired samples also have close variation.  
 
+We can conclude that the distribution of the paired difference and the separate samples are approximately normal with mild skew. The paired samples also have close variation.
 
-### The 90% CI for mean paired differences via  t-based procedure:
+### The 90% CI for mean paired differences via t-based procedure:
 
 ```{r}
 
@@ -1013,7 +892,6 @@ t1 <- t.test(Analysis_3$insuff_sleep_dif, conf.level = 0.9)
 
 tidy(t1)|> kbl(digits = 3) |> kable_styling()
 ```
-
 
 ### The 90% CI for mean paired differences via Boots strap based procedure :
 
@@ -1024,37 +902,22 @@ t2 <-
 smean.cl.boot(Analysis_3$insuff_sleep_dif, B = 2000, conf.int = 0.9)|> kbl(digits = 3) |> kable_styling()
 ```
 
+Our sample satisfies the assumptions of t test which require normal distribution of the population or the sample mean at least and that the paired samples were selected at random, and that the sampled paired differences are drawn from the population set of paired differences independently and have identical distributions.
 
-Our sample satisfies the assumptions of t test which require normal distribution of the population or the sample mean at least and that the paired samples were selected at random, and that the sampled paired differences are drawn from the population set of paired differences independently and have identical distributions. 
-
-In this case we will use the **t-based 90% CI** to calculate the mean differences for our independent two samples. 
-
-
+In this case we will use the **t-based 90% CI** to calculate the mean differences for our independent two samples.
 
 ## Conclusions
 
-
-Our research question was whether there was meaningful difference in sleep insufficiency among adults between the years 2018 and 2023 (pre and COVID-19 pandemic) from 441 US counties. Our initial belief is that there will be meaningful difference and that sleep insufficiency proportion would increase in 2023. Our assumption was based on the fact that many health behaviors showed considerable decline in the post pandemic period. Our analysis result aligned closely with our expectations. The independent samples t-test 90% Confidence interval was **0.404, 0.763** with a point estimate of **0.583**. The mean difference is positive and the confidence interval does not include 0. We can safely conclude that there is a meaningful increase in sleep insufficiency proportion among adults in our study sample.  
+Our research question was whether there was meaningful difference in sleep insufficiency among adults between the years 2018 and 2023 (pre and COVID-19 pandemic) from 441 US counties. Our initial belief is that there will be meaningful difference and that sleep insufficiency proportion would increase in 2023. Our assumption was based on the fact that many health behaviors showed considerable decline in the post pandemic period. Our analysis result aligned closely with our expectations. The independent samples t-test 90% Confidence interval was **0.404, 0.763** with a point estimate of **0.583**. The mean difference is positive and the confidence interval does not include 0. We can safely conclude that there is a meaningful increase in sleep insufficiency proportion among adults in our study sample.
 
 However, limitations exist in the county selection as well as potential issues with paired data. Addressing these concerns involves refining confidence intervals and selecting a more diverse county sample to improve the analysis' robustness. The study's limitations stem from the selected counties potentially not accurately representing the broader US population. Issues with pairing data from 2018 and 2023 pose concerns regarding the validity of the comparison. To enhance this analysis, refining the confidence intervals and broadening the county selection to capture a more comprehensive demographic spectrum could strengthen the study's generalizability. Additionally, exploring contributing factors and collecting qualitative data may offer a richer understanding of sleep behavior changes, further improving the analysis.
-
-
-
-
-
 
 # Portfolio Reflection
 
 During the development of our portfolio for project A, we faced some challenges in the analytical phases. One of the major obstacles we encountered was understanding and interpreting residual analysis in Analysis 1. It was a relatively new concept for us and we had little experience in handling that kind of work. Interpreting the fitted versus residual plot required time and effort to comprehend the concept and its implications for our analysis. Another obstacle was coding for analysis 2, where we inadvertently excluded the 'Highschl_complet_grp' variable in the code. To overcome this, we had to review our code and incorporate the necessary categorical variables ('High' and 'Low') to rectify the variable loss. Despite these challenges, we gained valuable insights into refining our analytical techniques and ensuring a more robust approach in future projects.
-
-
-
-
-
 
 # Session Information
 
 ```{r}
 session_info()
 ```
-

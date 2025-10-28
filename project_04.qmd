@@ -1,5 +1,5 @@
 ---
-title: "Preventive Dental Care and Hospitalization Trends Among Children in The US"
+title: "Preventive Dental Care and Hospitalization Trends Among Children"
 subtitle: "2022 National Survey of Children’s Health (NSCH) Data"
 author: "Sarah Albalawi & Walaa Alshaia"
 date: last-modified
@@ -24,7 +24,7 @@ format:
 knitr::opts_chunk$set(comment = NA)
 
 library(bayestestR); library(bestglm)
-library(car); library(caret); library(countreg); library(cutpointr)
+library(car); library(caret); library(cutpointr)
 library(Epi)
 library(GGally); library(glmnet); library(gt)
 library(insight)
@@ -36,7 +36,6 @@ library(patchwork); library(pROC); library(pscl)
 library(quantreg)
 library(ROCR); library(rstanarm)
 library(survey); library(survival); library(survminer)
-library(topmodels) 
 library(haven)
 library(broom.mixed)
 library(conflicted)
@@ -53,35 +52,25 @@ options(dplyr.summarise.inform = FALSE)
 theme_set(theme_bw())
 ```
 
-
-
 # Background
 
-The study uses data from the National Survey of Children's Health (NSCH), year 2022. It is a survey based data set with the main subject children aged 0-17. The population includes children from all 50 states and the District of Columbia.  The survey is a self-administered web-based and paper-based questionnaire. The respondent is a parent or a guardian, where one child from each household is selected to be the subject of the questionnaire. 
+The study uses data from the National Survey of Children's Health (NSCH), year 2022. It is a survey based data set with the main subject children aged 0-17. The population includes children from all 50 states and the District of Columbia. The survey is a self-administered web-based and paper-based questionnaire. The respondent is a parent or a guardian, where one child from each household is selected to be the subject of the questionnaire.
 
 This study focuses on children with hospitalization records. Medically compromised patients often face delay when receiving oral health care, which can negatively impact their oral and overall health status. The aim of this study is to assess whether being a child with frequent hospital visits, history of admission, and taking medication, impacts their access to preventive dental care.
 
-
-
 # Research Questions
 
-The overarching purpose of this study is to investigate the access and oral health status of children with hospitalization history. Medically compromised children often face barriers to preventive dental care, which negatively impacts their health outcomes. 
+The overarching purpose of this study is to investigate the access and oral health status of children with hospitalization history. Medically compromised children often face barriers to preventive dental care, which negatively impacts their health outcomes.
 
-**Research question 1:** 
-What are the odds of children with hospitalization records of receiving preventive dental care when other variables (age) are taken into account?
+**Research question 1:** What are the odds of children with hospitalization records of receiving preventive dental care when other variables (age) are taken into account?
 
-Hospital admission and ER visits were used to observe whether they present as barriers to preventive oral care access. Children with poor health status can often face difficulties accessing preventive dental care. 
+Hospital admission and ER visits were used to observe whether they present as barriers to preventive oral care access. Children with poor health status can often face difficulties accessing preventive dental care.
 
+**Research question 2:** What are the odds of children with hospitalization records of experiencing chronic cavities, when other variables (ER visits and medication) are taken into account?
 
-**Research question 2:** 
-What are the odds of children with hospitalization records of experiencing chronic cavities, when other variables (ER visits and medication) are taken into account?
-
-Hospital admission, ER visits, and medication use were added to observe potential associations. There has been dental reluctance in treating children with poor health status. Children with more hospital visits may face dental care neglect and consequently have higher odds of experiencing cavities 
-
-
+Hospital admission, ER visits, and medication use were added to observe potential associations. There has been dental reluctance in treating children with poor health status. Children with more hospital visits may face dental care neglect and consequently have higher odds of experiencing cavities
 
 # Data Ingest and Management
-
 
 ## Loading the Raw Data
 
@@ -100,12 +89,11 @@ nsch22_raw <- nsch_2022e_topical |>
   slice_sample(n = 3000)
 ```
 
-
 ## Cleaning the Data
 
 ### Selecting Variables We'll Use
 
-select the variables 
+select the variables
 
 ```{r}
 nsch22_raw <- nsch22_raw|>
@@ -115,7 +103,6 @@ nsch22_raw <- nsch22_raw|>
   dplyr::mutate(sc_age_years = as.numeric(sc_age_years))
 nsch22_raw
 ```
-
 
 ### Changing Variable Names
 
@@ -127,16 +114,15 @@ nsch22_raw <- nsch22_raw |>
 nsch22_raw
 ```
 
-
-
-### Working with Categorical Predictors 
+### Working with Categorical Predictors
 
 **er_visits**
 
 ```{r}
 nsch22_raw |> tabyl (er_visits) 
 ```
-The fourth categories has 15 observations. We will need to collapse the variable into three categories instead of four. 
+
+The fourth categories has 15 observations. We will need to collapse the variable into three categories instead of four.
 
 ```{r}
 
@@ -145,7 +131,6 @@ mutate (er_visits= fct_collapse(er_visits, "3" = c(" 3", "4")))
 tabyl(nsch22_raw$er_visits)
 
 ```
-
 
 ```{r}
 nsch22_raw <- nsch22_raw |>
@@ -158,9 +143,6 @@ nsch22_raw <- nsch22_raw |>
 tabyl(nsch22_raw$er_visits)
 ```
 
-
-
-
 **hospitalstay**
 
 ```{r}
@@ -170,7 +152,6 @@ mutate(hospitalstay = fct_recode (hospitalstay,
                                   "no"= "2"))
 tabyl(nsch22_raw$hospitalstay)
 ```
-
 
 **med_use**
 
@@ -182,12 +163,9 @@ mutate(med_use = fct_recode (med_use,
 tabyl(nsch22_raw$med_use)
 ```
 
+### Working with Categorical Outcomes
 
-
-
-### Working with Categorical Outcomes 
-
-**dentistvisit** 
+**dentistvisit**
 
 ```{r}
 nsch22_raw <- nsch22_raw |>
@@ -205,7 +183,6 @@ is.ordered(nsch22_raw$dentistvisit)
 tabyl(nsch22_raw$dentistvisit)
 ```
 
-
 **cavities**
 
 ```{r}
@@ -216,11 +193,9 @@ mutate(cavities = fct_recode (cavities,
 tabyl(nsch22_raw$cavities)
 ```
 
-
-
 ### Arranging the Tibble
 
-We will rename the cleaned sample as nsch22. 
+We will rename the cleaned sample as nsch22.
 
 ```{r}
 
@@ -229,12 +204,9 @@ nsch22 <- nsch22_raw
 dim(nsch22)
 ```
 
-
 ```{r}
 identical(nrow(nsch22), n_distinct(nsch22$hhid))
 ```
-
-
 
 ## Print and Save The Final Tibble
 
@@ -242,44 +214,33 @@ identical(nrow(nsch22), n_distinct(nsch22$hhid))
 write_rds(nsch22,"nsch22.Rds")
 ```
 
-
 # Code Book and Description
 
-Variable | Role | Type |  Description   |
-:--- | :--- | :--- | :--------------------------------------------- |
-**hhid** |ID | - | Unique Household ID  |
-**dentistvisit** |**Outcome (multi-categorical regression)** | 3 Categories | The number of dental visits the child had during the past 12 months to seek preventive dental care: None, 1 visit, 2 or more visits |
-**cavities ** |**Outcome (logistic regression)** | Binary | Child experience of chronic cavities during the past 12 Months (yes or no)|
-**age** |input | Quantitative | Child age in years |
-**er_visits ** |input | 3 Categories | The number of child emergency room visits (None, 1 visit, 2 or more visits)|
-**hospitalstay** |input | Binary | Child admitted to a hospital for at least one night during past 12 months (yes or no)|
-**med_use** |**Outcome** | Binary | Child need for prescribed medicine by a doctor (yes/ no)|
-
-
-
+| Variable | Role | Type | Description |
+|:-------------|:-------------|:-------------|:------------------------------|
+| **hhid** | ID | \- | Unique Household ID |
+| **dentistvisit** | **Outcome (multi-categorical regression)** | 3 Categories | The number of dental visits the child had during the past 12 months to seek preventive dental care: None, 1 visit, 2 or more visits |
+| **cavities** | **Outcome (logistic regression)** | Binary | Child experience of chronic cavities during the past 12 Months (yes or no) |
+| **age** | input | Quantitative | Child age in years |
+| **er_visits** | input | 3 Categories | The number of child emergency room visits (None, 1 visit, 2 or more visits) |
+| **hospitalstay** | input | Binary | Child admitted to a hospital for at least one night during past 12 months (yes or no) |
+| **med_use** | **Outcome** | Binary | Child need for prescribed medicine by a doctor (yes/ no) |
 
 # Analyses
 
 ## Analysis 1
 
-###  Research Question for Analysis 1
+### Research Question for Analysis 1
 
 What are the odds of children with hospitalization records of receiving preventive dental care when other variables (age) are taken into account?
 
-
 Children who have experienced hospitalization might have a higher likelihood of receiving preventive dental care. This could be due to frequent ER visits and hospitalization often indicating a decline in the health status, which may lead to a more comprehensive approach to healthcare, encompassing preventive dental care. Furthermore, younger children may be more likely to receive preventive dental care due to parental involvement and regular check-ups, while older children might have more autonomy over their healthcare decisions and may be more proactive about preventive measures. We need to conduct a proper statistical analysis of relevant data to confirm those anticipations.
 
-
-
-We plan to use an ordinal logistic regression model to analyze the likelihood of children with history of ER visits and hospital admission receiving preventive dental care. This model will consider three factors that might influence the outcome: age, history of hospitalization , and the number of emergency room visits  We will treat the outcome variable, `dentistvisit` as an **ordinal variable**, acknowledging that it has a natural order (No preventive visits ,1 visit, 2 or more visits).
-
-
+We plan to use an ordinal logistic regression model to analyze the likelihood of children with history of ER visits and hospital admission receiving preventive dental care. This model will consider three factors that might influence the outcome: age, history of hospitalization , and the number of emergency room visits We will treat the outcome variable, `dentistvisit` as an **ordinal variable**, acknowledging that it has a natural order (No preventive visits ,1 visit, 2 or more visits).
 
 ### Analysis 1 Outcome
 
-Our outcome of interest is `dentistvisit`. It indicates how many visits during the past 12 months a child has seen a dentist or other oral health care provider for preventive dental care(No preventive visits in the past 12 months, none,  1 visit, 2 or more visits). 
-
-
+Our outcome of interest is `dentistvisit`. It indicates how many visits during the past 12 months a child has seen a dentist or other oral health care provider for preventive dental care(No preventive visits in the past 12 months, none, 1 visit, 2 or more visits).
 
 ```{r}
 nsch22 |> filter(is.na(dentistvisit) == FALSE) |> nrow()
@@ -287,53 +248,47 @@ nsch22 |> filter(is.na(dentistvisit) == FALSE) |> nrow()
 
 There are 2410 rows with complete data on `dentistvisit.`
 
-
 ### Analysis 1 Predictors
 
 For Analysis 1, we will use four variables to predict `dentistvisit`:
 
-- `age`: child age in years
-- `er_visits`: How many times did this child visit a hospital emergency room? (None, 1 time, 2‐3 times, 4 or more times)
-- `hospitalstay`: Whether the child was admitted to the hospital to stay for at least one night during past 12 months (yes or no)
-
-
+-   `age`: child age in years
+-   `er_visits`: How many times did this child visit a hospital emergency room? (None, 1 time, 2‐3 times, 4 or more times)
+-   `hospitalstay`: Whether the child was admitted to the hospital to stay for at least one night during past 12 months (yes or no)
 
 ### Missingness
 
-First, we will generate a tibble that includes our variables of interest. 
+First, we will generate a tibble that includes our variables of interest.
 
 ```{r}
 nsch22_model_one <- nsch22  |>
  select(hhid, dentistvisit, age, er_visits, hospitalstay)
 ```
 
-Then we'll use `miss_var_summary` to see how many observations are missing for each variable. 
-
+Then we'll use `miss_var_summary` to see how many observations are missing for each variable.
 
 ```{r}
 miss_var_summary(nsch22_model_one)
 ```
 
-We have 590 missing observations on the outcome `dentistvisit`. 
+We have 590 missing observations on the outcome `dentistvisit`.
 
 ```{r}
 n_case_complete(nsch22_model_one); pct_complete_case(nsch22_model_one)
 ```
 
-- 2401 (80%) of the 3000 subjects in the nsch22_model_one are complete. 
+-   2401 (80%) of the 3000 subjects in the nsch22_model_one are complete.
 
-- The remaining 599 or 20%  observations have some missing data on predictors or the outcome.
+-   The remaining 599 or 20% observations have some missing data on predictors or the outcome.
 
-- We will assume these data are **missing at random (MAR)** and proceed with single imputation.
+-   We will assume these data are **missing at random (MAR)** and proceed with single imputation.
 
-- We will filter by complete cases for the outcome.
-
+-   We will filter by complete cases for the outcome.
 
 ```{r}
 nsch22_model_one <- nsch22_model_one  |>
   filter(complete.cases(dentistvisit))
 ```
-
 
 ### Single Imputation Approach
 
@@ -347,7 +302,6 @@ orderdata <- nsch22_model_one |> select(-hhid)
 nsch22_order_mice1 <- mice(orderdata, m = 15, printFlag = FALSE)
 ```
 
-
 ```{r}
 nsch22_order_si <- complete(nsch22_order_mice1) |> tibble()
 ```
@@ -357,8 +311,7 @@ nsch22_order_si$hhid <- nsch22_model_one$hhid
 dim(nsch22_order_si); n_miss(nsch22_order_si); nsch22_order_si 
 ```
 
-
-- The next step is to verify the single imputation with the multi-categorical variable `er_visits`: 
+-   The next step is to verify the single imputation with the multi-categorical variable `er_visits`:
 
 ```{r}
 nsch22_model_one |> tabyl (er_visits) |> adorn_pct_formatting()
@@ -378,22 +331,19 @@ describe(nsch22_order_si)
 
 Here's a breakdown of the observations from the `describe` analysis:
 
-
 **Hospital ER Visits:** Most children (2062) had no hospital ER visits in the past year. A smaller portion had one visit (274), even fewer had 2 or more visits or (74).
 
 **Hospital Admissions:** A large majority (2354) of the children had a prior hospitalization, while 59 had never been admitted.
 
-
 ### Checking the Outcome (order,levels and distribution)
 
-- We will check if our outcome `dentistvisit` is an ordered factor.
+-   We will check if our outcome `dentistvisit` is an ordered factor.
 
 ```{r}
 is.ordered(nsch22_order_si$dentistvisit)
 ```
 
-
-- We will check if the first level `dentistvisit` is No preventive visits
+-   We will check if the first level `dentistvisit` is No preventive visits
 
 ```{r}
 
@@ -401,10 +351,9 @@ nsch22_order_si |> tabyl(dentistvisit)
 
 ```
 
-- Bar Chart for `dentistvisit`
+-   Bar Chart for `dentistvisit`
 
 We will build a graphical summary of our outcome `dentistvisit` distribution.
-
 
 ```{r}
 
@@ -430,8 +379,6 @@ labs(title = "Preventive Dental Care",
 
 The graph reveals how preventive dental care is distributed among children in our NSCH 22 sample. Notably, the majority of children received dental care, with two or more visits being the most common frequency. While one visit was also relatively frequent, only 4% of children in the survey reported never having had preventive dental care in the past year.
 
-
-
 ```{r}
 ggplot(nsch22_order_si, aes(x = dentistvisit, y = age, fill = dentistvisit)) + 
     geom_violin(trim = TRUE) +
@@ -440,10 +387,7 @@ ggplot(nsch22_order_si, aes(x = dentistvisit, y = age, fill = dentistvisit)) +
     guides(fill = "none")
 ```
 
-
-
-
-### Partitioning the Data  
+### Partitioning the Data
 
 After dealing with missing values, we will split the data into training and testing samples with `resample` function. We want 75% in the training sample and 25% in the testing sample.
 
@@ -458,12 +402,13 @@ nsch22_order_train <- training(nsch22_o_splits)
 nsch22_order_test <- testing(nsch22_o_splits)
 ```
 
-We want to look at the distribution of subjects in both splits. 
+We want to look at the distribution of subjects in both splits.
 
 ```{r}
 dim(nsch22_order_train); dim(nsch22_order_test)
 ```
-Also, we want to check the breakdown of the distribution of preventive dental visits across different categories for both the training and test data sets. 
+
+Also, we want to check the breakdown of the distribution of preventive dental visits across different categories for both the training and test data sets.
 
 ```{r}
 #| echo: true
@@ -471,13 +416,11 @@ nsch22_order_train |> tabyl(dentistvisit)
 nsch22_order_test |> tabyl(dentistvisit)
 ```
 
-
 ### Scatterplot Matrix and Collinearity
-
 
 We will evaluate collinearity between predictors via scatter plot matrix and variance inflation factors.
 
-- Scatterplot Matrix:
+-   Scatterplot Matrix:
 
 ```{r}
 #| message: false
@@ -489,9 +432,7 @@ GGally::ggpairs(nsch22_order_train |> select (age, er_visits, hospitalstay, dent
 
 The correlation among the predictors is fairly modest, and the scatter plot matrix reveals no major concerns regarding collinearity among predictors.
 
-
-
-- Checking Variance Inflation Factors: 
+-   Checking Variance Inflation Factors:
 
 ```{r}
 
@@ -501,16 +442,13 @@ vif(polr(dentistvisit~ age+ er_visits+ hospitalstay, data= nsch22_order_train, H
 
 The predictors’ generalized variance inflation factors (GVIF) demonstrate a small level of collinearity. We therefore have no serious concerns with respect to collinearity.
 
-
 ### Models Fiting
 
+-   Fit proportional odds logistic regression model
 
-- Fit proportional odds logistic regression model 
+Our model, denoted as `m_polr`, uses proportional odds logistic regression to predict `dentistvisit.` This prediction is made considering these factors: age, er visits, and hospitalstay, utilizing the `polr` function. Additionally, we provide a summary of the model.
 
-
-Our model, denoted as `m_polr`, uses proportional odds logistic regression to predict `dentistvisit.` This prediction is made considering these factors: age, er visits, and hospitalstay, utilizing the `polr` function. Additionally, we provide a summary of the model. 
-
-Based on prior analysis, we confirm that our outcome variable is an ordered factor. 
+Based on prior analysis, we confirm that our outcome variable is an ordered factor.
 
 ```{r}
 
@@ -521,8 +459,7 @@ summary(m_polr)
 
 Our `m_polr` model includes two intercepts to accommodate the three levels of dentistvisit, along with six slopes corresponding to our four predictors.
 
-- Summarizing the Fit
-
+-   Summarizing the Fit
 
 ```{r}
 
@@ -533,10 +470,9 @@ glance(m_polr) |> gt() |>
 
 ```
 
-
 ### Interpreting the Model
 
-We will exponentiate our model coefficients to facilitate interpretation. 
+We will exponentiate our model coefficients to facilitate interpretation.
 
 ```{r}
 tidy(m_polr, exponentiate = TRUE, conf.int = TRUE) |>
@@ -545,26 +481,21 @@ gt() |> fmt_number(estimate:conf.high, decimals = 3)
 
 ```
 
+**Coefficients Interpretation:**
 
-**Coefficients Interpretation:** 
+If we compare two children, A and B, with the same values of the other predictors:
 
-If we compare two children, A and B, with the same values of the other predictors: 
-
-- If child A is one year older than child B, then the model predicts that child A will have 1.067 times higher odds of having more preventive dental care visits with 95% CI:(1.047, 1.088). 
-
+-   If child A is one year older than child B, then the model predicts that child A will have 1.067 times higher odds of having more preventive dental care visits with 95% CI:(1.047, 1.088).
 
 The influence of hospital ER visits, whether occurring once or 2 times or more, compared to none, is estimated to have coefficients of approximately 0.8 and 0.75, respectively. This suggests that when holding other variables constant, each additional ER visit is associated with a slight decrease in the odds of attending dental appointments, by approximately 0.80 and 0.75, respectively. The 95% CI for these estimates are (0.60,1.076) for the first scenario and (0.421, 1.334) for the latter. Notably, these effects are deemed to be relatively small.
 
-
 For children with no history of hospitalization, the odds ratio of 0.486 indicates that they have lower odds of preventive dental care visits with 95% CI:(0.234, 0.954), holding all other variables constant. This effect is considered to be relatively minor.
-
-
 
 ### Validating Models
 
-- Using `lrm` for Proportional Odds Logistic Regression 
+-   Using `lrm` for Proportional Odds Logistic Regression
 
-We will build a model using `lrm` tool from the `rms` package 
+We will build a model using `lrm` tool from the `rms` package
 
 ```{r}
 d <- datadist(nsch22_order_train)
@@ -574,27 +505,24 @@ m_lrm <- lrm(dentistvisit~ age+ er_visits+ hospitalstay, data= nsch22_order_trai
 m_lrm
 ```
 
-The *Nagelkerke* R^2 value is suboptimal, measuring at 0.035. The C statistic of 0.590 suggests that the model fails in terms of predictive ability. 
+The *Nagelkerke* R\^2 value is suboptimal, measuring at 0.035. The C statistic of 0.590 suggests that the model fails in terms of predictive ability.
 
 We validate the summary statistics with `validate.`
-
 
 ```{r}
 set.seed(4322023)
 validate(m_lrm)
 ```
 
-We obtain a validated 𝑅^2 of  0.0310 , and a validated C statistic of 0.5 + (0.1735/2) = 0.586, which suggests a that the model fails in terms of predictive ability.
+We obtain a validated 𝑅\^2 of 0.0310 , and a validated C statistic of 0.5 + (0.1735/2) = 0.586, which suggests a that the model fails in terms of predictive ability.
 
 ### Effects Plot
 
 Before proceeding with any predictions, we present a plot illustrating the effect size of our model. The summary function applied to the `lrm` fit showcases the effect size by comparing the 25th percentile to the 75th percentile.
 
-
 ```{r}
 plot(summary(m_lrm))
 ```
-
 
 ```{r}
 summary(m_lrm)
@@ -602,16 +530,11 @@ summary(m_lrm)
 
 According to this model, when the age increases from 6 to 15 years old the odds of having more `dentistvisit` are estimated to be 1.8 times higher, with a 95% CI of (1.5, 2.1), while keeping all other variables constant. Additionally, the effect of being a 15-year-old child on the log odds of `dentistvisit` is estimated to be 0.58, with a SE of 0.1.
 
+When the child's number of ER visits increases from none to once in the past 12 months, this is associated with an estimated effect on the log odds of `dentistvisit` of -0.21, with a SE of 0.15. This translates to an odds ratio of 0.80, indicating that children with one ER visit have 80% lower odds of having preventive dental care compared to children with no ER visits, with 95% CI (0.60, 1.07), while keeping all other variables constant. The impact is relatively minor.
 
-When the child's number of ER visits increases from none to once in the past 12 months, this is associated with an estimated effect on the log odds of `dentistvisit` of -0.21, with a SE of 0.15. This translates to an odds ratio of 0.80, indicating that children with one ER visit have 80% lower odds of having preventive dental care compared to children with no ER visits, with 95% CI (0.60, 1.07), while keeping all other variables constant. The impact is relatively minor.  
-
-
-When the child's number of ER visits increases from none to 2 times or more in the past 12 months, this is associated with an estimated effect on the log odds of dentist visits of -0.29, with a SE of 0.29 Alternatively, it is associated with an estimated odds ratio of 0.74, indicating lower odds of `dentistvisits`, with a 95% CI of (0.42, 1.32), while controlling for all other variables. The impact is relatively small.  
-
+When the child's number of ER visits increases from none to 2 times or more in the past 12 months, this is associated with an estimated effect on the log odds of dentist visits of -0.29, with a SE of 0.29 Alternatively, it is associated with an estimated odds ratio of 0.74, indicating lower odds of `dentistvisits`, with a 95% CI of (0.42, 1.32), while controlling for all other variables. The impact is relatively small.
 
 Being admitted to the hospital for at least one night in the past 12 months is associated with an estimated effect on the log odds of `dentistvisit` of 0.72, with a standard error of 0.36. Alternatively, it is associated with a higher estimated odds ratio effect of 2 times for `dentistvisit`, with a 95% confidence interval of (1, 4.13). However, it's important to note that the effect is very small.
-
-
 
 ### Nomogram of Model
 
@@ -625,7 +548,6 @@ plot(nomogram(m_lrm,
              'Prob Y = 3 (High)' = fun.3)))
 ```
 
-
 ### Testing the Proportional Odds Assumption
 
 We will apply the equivalent multinomial logit model to assess the proportional odds assumption. We will build this fit with the multinomial model. This model does not adhere to our assumption.
@@ -637,18 +559,17 @@ m_multi
 
 We will calculate the log likelihood values for each of our models by comparing the log likelihoods of the multinomial model and the proportional odds logistic regression model. The multinomial logit model includes 2 intercepts and 12 slopes, while the proportional odds logit model includes 2 intercepts and 6 slopes. Therefore, the difference in parameters between the two models is 6.
 
-
 ```{r}
 LL_1 <- logLik(m_polr)
 LL_1m <- logLik(m_multi)
 (G <- -2 * (LL_1[1] - LL_1m[1]))
 ```
 
-
 ```{r}
 pchisq(G, 6, lower.tail = FALSE)
 ```
-As indicated by the p-value of 0.029, the proportional odds logistic regression model provides a less proper fit compared to the more complex multinomial logit model. 
+
+As indicated by the p-value of 0.029, the proportional odds logistic regression model provides a less proper fit compared to the more complex multinomial logit model.
 
 ```{r}
 par(mfrow = c(2,2))
@@ -656,15 +577,15 @@ resid(m_lrm, 'score.binary', pl=TRUE)
 par(mfrow= c(1,1))
 ```
 
-### AIC and BIC 
+### AIC and BIC
 
 ```{r}
 AIC(m_polr, m_multi)
 ```
+
 ```{r}
 BIC(m_polr,m_multi)
 ```
-
 
 `m_multi` demonstrates a slightly superior AIC. However, in terms of BIC, `m_polr`outperform `m_multi.` Based on the initial assumption that our outcome is an ordered factor, we will proceed with predictions using the polr model.
 
@@ -672,9 +593,9 @@ BIC(m_polr,m_multi)
 
 We attempted to perform traditional validation using a separate test set, but this approach proved unsuitable because our outcome variable `dentistvisit` is an ordered categorical factor. Traditional validation methods require numerical output for predictions, which is not possible with this type of outcome.
 
-### Cross Tabulation Approach 
+### Cross Tabulation Approach
 
-- Predicted vs. Observed: How well does the model fit?
+-   Predicted vs. Observed: How well does the model fit?
 
 Next, we will apply our proportional odds logistic regression model, `m_polr`, to predict the frequency of preventive dental visits for each of the 603 subjects in our test sample `nsch22_order_test.`
 
@@ -683,15 +604,13 @@ addmargins(table(predict(m_polr, newdata = nsch22_order_test), nsch22_order_test
 dnn = c("Predicted", "Observed Values")))
 ```
 
-The polr model `m_polr` predicts the `dentistvisit` category correctly for (0+49+317)=366 out of 603 children in the sample, accounting for 60.6% of the children  in the test sample.
+The polr model `m_polr` predicts the `dentistvisit` category correctly for (0+49+317)=366 out of 603 children in the sample, accounting for 60.6% of the children in the test sample.
 
 **Our model achieves the following accurate predictions:**
 
-- 0% correct for children who actually never had a preventive dental care visit.
-- 51.6% correct for children who actually had one preventive dental care visit (49 out of 95).
-- 62.4% correct for children who actually had two or more preventive dental care visits (317 out of 508).
-
-
+-   0% correct for children who actually never had a preventive dental care visit.
+-   51.6% correct for children who actually had one preventive dental care visit (49 out of 95).
+-   62.4% correct for children who actually had two or more preventive dental care visits (317 out of 508).
 
 Here, we’ll fit the appropriate `m_polr` and see what predictions it makes across our 1807 subjects in training sample `nsch22_order_train`.
 
@@ -704,23 +623,19 @@ The polr model `m_polr` predicts the `dentistvisit` category correctly for (0+16
 
 **Our model achieves the following accurate predictions:**
 
-- 0% correct for children who actually never had a preventive dental care visit.
-- 57.3% correct for children who actually had one preventive dental care visit (160 out of 279).
-- 60 % correct for children who actually had two or more preventive dental care visits (916 out of 1528).
+-   0% correct for children who actually never had a preventive dental care visit.
+-   57.3% correct for children who actually had one preventive dental care visit (160 out of 279).
+-   60 % correct for children who actually had two or more preventive dental care visits (916 out of 1528).
 
 ### Making Predictions
-    
-We will utilize our model, `m_polr`, to predict the frequency of preventive dental visits for two hypothetical children:
-- Child 1: 8 years old, 4 or more ER visits, and hospitalized.
-- Child 2: 15 years old, 4 or more ER visits, and hospitalized.
 
+We will utilize our model, `m_polr`, to predict the frequency of preventive dental visits for two hypothetical children: - Child 1: 8 years old, 4 or more ER visits, and hospitalized. - Child 2: 15 years old, 4 or more ER visits, and hospitalized.
 
 ```{r}
 temp.dat <- data.frame(name = c("1", "2"), age = c(8,15), er_visits = c("2 or more visits", "2 or more visits"), hospitalstay = c("yes", "yes"))
 
 predict(m_polr, temp.dat, type = "p")
 ```
-
 
 Based on our model's predictions `m_polr`, child 1 (8 years old) has a higher probability of having one preventive dental visit, while Child 2 (15 years old) has a higher probability of having two or more preventive dental visits.
 
@@ -743,27 +658,25 @@ data = nsch22_model_one, fitargs=list(x=TRUE,y=TRUE))
 m_imp
 ```
 
-The The *Nagelkerke* R^2 value remains similar with that obtained from single imputation (0.035). Similarly, the C statistic of 0.591 almost matches the result from single imputation, indicating a lack of predictive ability in the model.
-
+The The *Nagelkerke* R\^2 value remains similar with that obtained from single imputation (0.035). Similarly, the C statistic of 0.591 almost matches the result from single imputation, indicating a lack of predictive ability in the model.
 
 ### Comparing the Coeffiecnts (exponentiated)
+
 ```{r}
 round_half_up(exp(m_lrm$coefficients),3)
 ```
+
 ```{r}
 round_half_up(exp(m_imp$coefficients),3)
 ```
 
-Comparing the `lrm` models obtained from single vs. multiple imputation reveals that the coefficients for `age` and `er_visits` (2 times or more category) are relatively similar. However, the coefficients for other variables show some  differences between the two imputation methods.
-
-
-
+Comparing the `lrm` models obtained from single vs. multiple imputation reveals that the coefficients for `age` and `er_visits` (2 times or more category) are relatively similar. However, the coefficients for other variables show some differences between the two imputation methods.
 
 ## Analysis 2
 
 The outcome for this analysis is `cavities`. The predictors are `er_visits`, `hospitalstay`, and `med_use`.
 
-We will start by creating a subset for the logistic analysis. 
+We will start by creating a subset for the logistic analysis.
 
 ```{r}
 
@@ -774,10 +687,9 @@ nsch22_log
 
 ```
 
+### Prepare the binary outcome
 
-### Prepare the binary outcome 
-
-We will observe the `cavities` outcome distribution in the study sample. 
+We will observe the `cavities` outcome distribution in the study sample.
 
 ```{r}
 
@@ -808,8 +720,7 @@ labs(title = "Chronic Cavities Experience",
 
 ```
 
-There are 2,391 subjects with complete cases out of the 3000 study sample subjects. 11% of the children guardians/ parents reported that they have experienced chronic cavities, while the remining 89% did not. 
-
+There are 2,391 subjects with complete cases out of the 3000 study sample subjects. 11% of the children guardians/ parents reported that they have experienced chronic cavities, while the remining 89% did not.
 
 ### Missingness
 
@@ -821,7 +732,7 @@ miss_var_summary(nsch22_log) |> gt()
 
 ```
 
-The proportion of missing data in this sample is about 1.33%. The outcome `cavities` has the highest proportion of missing cases 0.47%, as well as the predictor `hospitalstay` followed by the other predictors `er_visits` and `med_use` (0.33 and 0.06). Overall, the proportion of missingness is minute. Due to the small proportion of missingness, we can assume that the data is missing at random (MAR).  
+The proportion of missing data in this sample is about 1.33%. The outcome `cavities` has the highest proportion of missing cases 0.47%, as well as the predictor `hospitalstay` followed by the other predictors `er_visits` and `med_use` (0.33 and 0.06). Overall, the proportion of missingness is minute. Due to the small proportion of missingness, we can assume that the data is missing at random (MAR).
 
 For the sake of this project, we will replace the missing values through the multiple imputation method using `aregImpute`.
 
@@ -837,7 +748,6 @@ nsch22_imp <-
                B = 10, n.impute = 3, pr = FALSE)
 
 ```
-
 
 ### Ordinary logistic model
 
@@ -855,13 +765,10 @@ m2_ord
 
 ```
 
-
-
 ```{r}
 
 round_half_up(exp(m2_ord$coefficients),3)
 ```
-
 
 We will observe the size effects through this plot:
 
@@ -871,10 +778,9 @@ plot(summary(m2_ord))
 
 ```
 
-Our model predicts that children that have visited the ER in the hospital (1 visit and 2 or more visits) have lower odds of experiencing toothaches (0.929 and 0.963 respectively) compared to those with no history of ER visits. It also predicts that children that have been admitted to stay for at least one night in the hospital have lower odds (0.62) of experiencing chronic cavities compared to children with no history of hospital admission. However, children using medication have (1.61) the odds of experiencing chronic cavities. All of these assumptions are made while holding other factors constant. 
+Our model predicts that children that have visited the ER in the hospital (1 visit and 2 or more visits) have lower odds of experiencing toothaches (0.929 and 0.963 respectively) compared to those with no history of ER visits. It also predicts that children that have been admitted to stay for at least one night in the hospital have lower odds (0.62) of experiencing chronic cavities compared to children with no history of hospital admission. However, children using medication have (1.61) the odds of experiencing chronic cavities. All of these assumptions are made while holding other factors constant.
 
-All confidence intervals, with the exception of `med_use`, cross the value of 1. This indicates that the medication use variable is the only variable associate with the outcome and therefore contributes to the model predictability.     
-
+All confidence intervals, with the exception of `med_use`, cross the value of 1. This indicates that the medication use variable is the only variable associate with the outcome and therefore contributes to the model predictability.
 
 We will validate our model using the Bootstrap method.
 
@@ -885,10 +791,7 @@ validate(m2_ord, B = 50)
 
 ```
 
-The C statistic = 0.5 + (0.0705/2) = 0.53525
-With a low AUC value, we can see that the model has a poor predictive performance. The Nagelkerke score of 0.002 further supports this conclusion regarding the model. 
-
-
+The C statistic = 0.5 + (0.0705/2) = 0.53525 With a low AUC value, we can see that the model has a poor predictive performance. The Nagelkerke score of 0.002 further supports this conclusion regarding the model.
 
 We will check whether collinearity is a problem.
 
@@ -900,12 +803,9 @@ rms::vif(m2_ord)
 
 The value of inflation is not concerning for the presented predictors. Using an interaction term is not necessary in this case.
 
-
-
 ### Bayesian logistic model
 
 For the Bayesian method, the data source should be a data frame. With the proportion of missingness being small (1.33%), we can use a complete data set `nsch22_cc`.
-
 
 We will fit the Bayesian logistic model `m2_bayes`:
 
@@ -921,8 +821,6 @@ summary(m2_bayes)
 
 ```
 
-
-
 We will extract the posterior
 
 ```{r}
@@ -933,7 +831,6 @@ head(posteriors)
 
 ```
 
-
 A summary of the posterior distribution can be observed below.
 
 ```{r}
@@ -941,8 +838,6 @@ A summary of the posterior distribution can be observed below.
 describe_posterior(posteriors, test = c("pd", "ROPE")) |> print_md(decimals = 3)
 
 ```
-
-
 
 A summary of the prior distribution can be also be produced.
 
@@ -952,8 +847,6 @@ describe_prior(m2_bayes) |> print_html(decimals = 3)
 
 ```
 
-
-
 We can also visualize the coefficients and credible intervals.
 
 ```{r}
@@ -962,7 +855,7 @@ plot(m2_bayes, prob = 0.5, prob_outer = 0.95)
 
 ```
 
-To compare the ordinary logistic model results with the Bayesian logistic model's, we will produce a table with the exponeniated coefficients. This will also help in interpreting the odds ratio. 
+To compare the ordinary logistic model results with the Bayesian logistic model's, we will produce a table with the exponeniated coefficients. This will also help in interpreting the odds ratio.
 
 ```{r}
 
@@ -972,10 +865,7 @@ broom.mixed::tidy(m2_bayes, exponentiate = TRUE,
 
 ```
 
-Similar the regular logistic regression model, the Bayesian model predicts that children with a history of ER visits have the same odds of experiencing chronic cavities compared to children with no ER visit history (1.01 and 0.98). The same findings can be observed with the hospital overnight stay (1.04). Contrary to the regular logistic regression model, the medication use is predicted to have the same odds (0.97). All confidence intervals cross the value of one, indicating these variables have weak association with the outcome (chronic cavities). All of these assumptions were made while holding other variables constant. 
-
-
-
+Similar the regular logistic regression model, the Bayesian model predicts that children with a history of ER visits have the same odds of experiencing chronic cavities compared to children with no ER visit history (1.01 and 0.98). The same findings can be observed with the hospital overnight stay (1.04). Contrary to the regular logistic regression model, the medication use is predicted to have the same odds (0.97). All confidence intervals cross the value of one, indicating these variables have weak association with the outcome (chronic cavities). All of these assumptions were made while holding other variables constant.
 
 Graphical Posterior Predictive Checks
 
@@ -985,64 +875,47 @@ pp_check(m2_bayes, nreps = 10)
 
 ```
 
-
-
-
 ```{r}
 
 pp_check(m2_bayes, plotfun = "stat_2d", stat = c("mean", "sd"))
 
 ```
 
-
-
 # Conclusions and Discussion
 
-
-## Analysis One  
+## Analysis One
 
 What are the odds of children with hospitalization records of receiving preventive dental care when other variables (age) are taken into account?
 
-
 We hypothesized that children who experienced frequent ER visits and hospitalization might be more likely to receive dental care, and that younger children might be more likely to receive frequent dental care visits compared to older children.
-
 
 The proportional odds logistic regression model (POLR) revealed that age plays a role in predicting dental care visits. The model predicts that the likelihood of a child seeking preventive dental care increases by 1.067 times for each additional year of age. The impact of hospital ER visits was surprising. While we anticipated a positive association, the results showed a slight decrease in the odds of dental visits with each additional ER visit. However, for children with frequent hospital admission, the model suggested a higher likelihood of dental care than those without history of hospitalization visits. However, the small effect sizes across all these factors indicate their limited individual impact.
 
+Our POLR predicting preventive dental visits with three levels (no preventive visits,1 visit,2 or more visits) using age, er_visits and hospitalstay has relatively poor or weak predictive ability. The validated 𝑅\^ 2 of 0.0310, and a validated C of 0.5 + (0.1735/2) = 0.586 indicate that the model fails to fit our data well. However, it was able to correctly predict dental visit categories to some extent, particularly for children with one and two or more visits (51.6% and 62%, respectively).
 
-Our POLR predicting preventive dental visits with three levels (no preventive visits,1 visit,2 or more visits) using age, er_visits and hospitalstay has relatively poor or weak predictive ability. The validated 𝑅^ 2 of 0.0310, and a validated C of 0.5 + (0.1735/2) = 0.586 indicate that the model fails to fit our data well. However, it was able to correctly predict dental visit categories to some extent, particularly for children with one and two or more visits (51.6% and 62%, respectively).
-
-
-Accounting for more sample size and incorporating additional factors beyond those currently included is crucial to enhancing the model's performance. Socioeconomic status and access to healthcare are potential variables that could contribute to predicting preventive dental care among children in the US. 
-
-
+Accounting for more sample size and incorporating additional factors beyond those currently included is crucial to enhancing the model's performance. Socioeconomic status and access to healthcare are potential variables that could contribute to predicting preventive dental care among children in the US.
 
 ## Analysis Two
 
 What are the odds of children with hospitalization records of experiencing chronic cavities, when other variables (ER visits and medication) are taken into account?
 
-In this study, we hypothesized that children with hospitalization history have higher odds of experiencing chronic cavities. The same assumption was made for children with a history of medication use. The ordinary logistic model predicted that children with ER visitation history have the same odds (0.929 and 0.963) of experiencing chronic cavities, compared to children without history. As hypothesized, children who use medication have higher odds (1.61) of chronic cavities. Children admitted to a hospital for at least one night had lower odds (0.62). In the ordinary logistic regression model, the medication use variable was the only variable with a confidence interval excluding the value of 1, indicating high association with the outcome. 
+In this study, we hypothesized that children with hospitalization history have higher odds of experiencing chronic cavities. The same assumption was made for children with a history of medication use. The ordinary logistic model predicted that children with ER visitation history have the same odds (0.929 and 0.963) of experiencing chronic cavities, compared to children without history. As hypothesized, children who use medication have higher odds (1.61) of chronic cavities. Children admitted to a hospital for at least one night had lower odds (0.62). In the ordinary logistic regression model, the medication use variable was the only variable with a confidence interval excluding the value of 1, indicating high association with the outcome.
 
 The Bayes logistic regression produced the same results regarding the ER visits and hospital stay variables. However, the results were different for the medication use variable. The model predicted that children with 1 visit or 2 or more ER visits have the same odds (1.01 and 0.98) of children with no history of ER visits. The same findings can be observed with the hospital overnight stay (1.04) and medication use (0.97). All confidence intervals contain the value of one, indicating these variables have a weak association with the outcome (chronic cavities).
 
-The Bayes regression model presents a better understanding of the findings. This AUC value of the model was very low (0.56) and the Nagelkerke R2 value (0.002) indicate weak predictive performance of the model. Therefore, the predictions produced from the model are not reliable. The predictors have a weak association with the outcome and as a result cannot contribute meaningfully to the model predictability. 
+The Bayes regression model presents a better understanding of the findings. This AUC value of the model was very low (0.56) and the Nagelkerke R2 value (0.002) indicate weak predictive performance of the model. Therefore, the predictions produced from the model are not reliable. The predictors have a weak association with the outcome and as a result cannot contribute meaningfully to the model predictability.
 
-Based on these findings, future studies regarding children with hospitalization records should use scores to evaluate the level of the health status. Objective methods evaluating oral health (such as the DMFT score) can provide reliable results compared to subjective measures (reported cavities experience). 
-
-
+Based on these findings, future studies regarding children with hospitalization records should use scores to evaluate the level of the health status. Objective methods evaluating oral health (such as the DMFT score) can provide reliable results compared to subjective measures (reported cavities experience).
 
 # References and Acknowledgments
 
 ## References
 
-The data set was pulled from the National Survey for Child Health year 2022.
-Data Source: https://www.childhealthdata.org/learn-about-the-nsch/nsch-codebooks
-
+The data set was pulled from the National Survey for Child Health year 2022. Data Source: https://www.childhealthdata.org/learn-about-the-nsch/nsch-codebooks
 
 ## Acknowledgments
 
-First and foremost, we would like to express our deepest gratitude to Professor Love for his excellent teaching, unwavering support, and the abundance of resources he provided throughout the semester. His patience and guidance were invaluable. We also extend our heartfelt appreciation to Alex, Miza, Monica, Lindsey, and all the TAs for their tireless assistance and willingness to address all our concerns throughout the semester, especially during the project period.  
-
+First and foremost, we would like to express our deepest gratitude to Professor Love for his excellent teaching, unwavering support, and the abundance of resources he provided throughout the semester. His patience and guidance were invaluable. We also extend our heartfelt appreciation to Alex, Miza, Monica, Lindsey, and all the TAs for their tireless assistance and willingness to address all our concerns throughout the semester, especially during the project period.
 
 # Session Information
 

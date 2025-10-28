@@ -1,5 +1,5 @@
 ---
-title: "Dental Proportion: A Potential Factor in Reducing Adult Smoking and Excessive Drinking"
+title: "Dentists, Adult Smoking, and Excessive Drinking"
 subtitle: "A Cross-sectional Study from CHR 2018 - 2024"
 author: "Sarah Albalawi"
 date: last-modified
@@ -15,12 +15,7 @@ format:
     theme: default  
 ---
 
-
-
-
 # R Setup {.unnumbered}
-
-
 
 ```{r}
 #| message: false
@@ -57,10 +52,9 @@ theme_set(theme_bw())
 
 ```
 
-
 ### Loading CHR Data {.unnumbered}
 
-We will load two data sets from the County Health Ranking source: CHR  from year 2024 and CHR from year 2018.
+We will load two data sets from the County Health Ranking source: CHR from year 2024 and CHR from year 2018.
 
 ```{r}
 
@@ -78,11 +72,11 @@ dim(chr18_raw)
 
 ```
 
-# Data Management 
+# Data Management
 
 ## Joining data sets
 
-We will only use the outcomes `smoking` and `excessive drinking` from the 2024 CHR data set. 
+We will only use the outcomes `smoking` and `excessive drinking` from the 2024 CHR data set.
 
 ```{r}
 
@@ -92,7 +86,6 @@ chr24_var <- chr24_raw|> dplyr::select(
     v049_rawvalue)
 
 ```
-
 
 The exposure `dentist proportion` and the covariates will be pulled from the 2018 CHR data set.
 
@@ -134,7 +127,6 @@ chr18_var <- chr18_raw|> dplyr::select(
 
 ```
 
-
 Now we will joing the two table to produce our initial working data set `chr_1`.
 
 ```{r}
@@ -148,53 +140,50 @@ dim(chr_1)
 
 Our joint data set has 3,195 observations (counties) and 34 variables (health measures).
 
-
 ## The Codebook {.unnumbered}
 
 The data file includes 3,195 observations (counties), on 34 variables (health measures).
 
-Variable | Description | Notes | Year 
---------------------: | ----------------------| -----------------------------------------|-------------
-`fipscode` | 5-digit FIPS Code  | 
-`v088_rawvalue` | Number of dentists per 1000 population | **Binary Exposure**: High proportion vs Low proportion | 2018
-`v009_rawvalue` | Adult Smoking prevalence % | **Quantitative Outcome 1** | 2024
-`v049_rawvalue` | Excessive Drinking prevalence % | **Quantitative outcome 2** | 2024
-`v052_rawvalue` | % Below 18 Years of Age proportion  | *Covariate* | 2018
-`v053_rawvalue` | % 65 and Older proportion  | *Covariate* | 2018
-`v054_rawvalue` | % Non-Hispanic Black proportion | *Covariate* | 2018
-`v055_rawvalue` | % American Indian or Alaska Native proportion  | *Covariate* | 2018
-`v081_rawvalue` | % Asian proportion | *Covariate* | 2018
-`v056_rawvalue` | % Hispanic proportion | *Covariate* | 2018
-`v126_rawvalue` | % Non-Hispanic White proportion | *Covariate* | 2018
-`v057_rawvalue` | % Female proportion | *Covariate* | 2018
-`v058_rawvalue` | % Rural | *Covariate* | 2018
-`v002_rawvalue` | % Poor or Fair Health | *Covariate* | 2018
-`v036_rawvalue` | Poor Physical Health Days | *Covariate* | 2018
-`v042_rawvalue` | Poor Mental Health Days | *Covariate* | 2018
-`v133_rawvalue` | Food Environment Index | *Covariate* | 2018
-`v085_rawvalue` | Uninsured population % | *Covariate* | 2018
-`v004_rawvalue` | Primary Care Physicians per population | *Covariate* | 2018
-`v062_other_data_1` | Ratio of population to mental health providers | *Covariate* | 2018
-`v021_rawvalue` | High School Completion % | *Covariate* | 2018
-`v069_rawvalue` | Some College % | *Covariate* | 2018
-`v023_rawvalue` | Unemployment % | *Covariate* | 2018
-`v044_rawvalue` | Income Inequality | *Covariate* | 2018
-`v140_rawvalue` | Social Associations | *Covariate* | 2018
-`v070_rawvalue` | Physical Inactivity days | *Covariate* | 2018
-`v011_rawvalue` | Adult Obesity prevalence % | *Covariate* | 2018
-`v060_rawvalue` | Diabetes Prevalence % | *Covariate* | 2018
-`v143_rawvalue` | Insufficient Sleep proportion % | *Covariate* | 2018
-`v141_rawvalue` | Residential Segregation - Black/White | *Covariate* | 2018
-`v147_rawvalue` | Life Expectancy (years) | *Covariate* | 2018
-`v063_rawvalue` | Median Household Income | *Covariate* | 2018
-`v153_rawvalue` | Home ownership | *Covariate* | 2018
-`v154_rawvalue` | Severe Housing Cost Burden | *Covariate* | 2018
+| Variable | Description | Notes | Year |
+|---:|----|----|----|
+| `fipscode` | 5-digit FIPS Code |  |  |
+| `v088_rawvalue` | Number of dentists per 1000 population | **Binary Exposure**: High proportion vs Low proportion | 2018 |
+| `v009_rawvalue` | Adult Smoking prevalence % | **Quantitative Outcome 1** | 2024 |
+| `v049_rawvalue` | Excessive Drinking prevalence % | **Quantitative outcome 2** | 2024 |
+| `v052_rawvalue` | \% Below 18 Years of Age proportion | *Covariate* | 2018 |
+| `v053_rawvalue` | \% 65 and Older proportion | *Covariate* | 2018 |
+| `v054_rawvalue` | \% Non-Hispanic Black proportion | *Covariate* | 2018 |
+| `v055_rawvalue` | \% American Indian or Alaska Native proportion | *Covariate* | 2018 |
+| `v081_rawvalue` | \% Asian proportion | *Covariate* | 2018 |
+| `v056_rawvalue` | \% Hispanic proportion | *Covariate* | 2018 |
+| `v126_rawvalue` | \% Non-Hispanic White proportion | *Covariate* | 2018 |
+| `v057_rawvalue` | \% Female proportion | *Covariate* | 2018 |
+| `v058_rawvalue` | \% Rural | *Covariate* | 2018 |
+| `v002_rawvalue` | \% Poor or Fair Health | *Covariate* | 2018 |
+| `v036_rawvalue` | Poor Physical Health Days | *Covariate* | 2018 |
+| `v042_rawvalue` | Poor Mental Health Days | *Covariate* | 2018 |
+| `v133_rawvalue` | Food Environment Index | *Covariate* | 2018 |
+| `v085_rawvalue` | Uninsured population % | *Covariate* | 2018 |
+| `v004_rawvalue` | Primary Care Physicians per population | *Covariate* | 2018 |
+| `v062_other_data_1` | Ratio of population to mental health providers | *Covariate* | 2018 |
+| `v021_rawvalue` | High School Completion % | *Covariate* | 2018 |
+| `v069_rawvalue` | Some College % | *Covariate* | 2018 |
+| `v023_rawvalue` | Unemployment % | *Covariate* | 2018 |
+| `v044_rawvalue` | Income Inequality | *Covariate* | 2018 |
+| `v140_rawvalue` | Social Associations | *Covariate* | 2018 |
+| `v070_rawvalue` | Physical Inactivity days | *Covariate* | 2018 |
+| `v011_rawvalue` | Adult Obesity prevalence % | *Covariate* | 2018 |
+| `v060_rawvalue` | Diabetes Prevalence % | *Covariate* | 2018 |
+| `v143_rawvalue` | Insufficient Sleep proportion % | *Covariate* | 2018 |
+| `v141_rawvalue` | Residential Segregation - Black/White | *Covariate* | 2018 |
+| `v147_rawvalue` | Life Expectancy (years) | *Covariate* | 2018 |
+| `v063_rawvalue` | Median Household Income | *Covariate* | 2018 |
+| `v153_rawvalue` | Home ownership | *Covariate* | 2018 |
+| `v154_rawvalue` | Severe Housing Cost Burden | *Covariate* | 2018 |
 
-> Note: The analysis will include one exposure and two outcome variables. 
+> Note: The analysis will include one exposure and two outcome variables.
 
-
-
-## Renaming the variables  
+## Renaming the variables
 
 ```{r}
 
@@ -236,7 +225,6 @@ chr_1 <- chr_1 |>
 
 ```
 
-
 Checking the new names:
 
 ```{r}
@@ -247,8 +235,6 @@ names(chr_1)
 
 > The new names look reasonable and are free from spelling errors.
 
-
-
 ## Categorizing Exposure `dentist_grp`
 
 ```{r}
@@ -257,8 +243,7 @@ summary(chr_1$dentist_grp)
 
 ```
 
-We will use the first quartile (0.028) and third quartile (0.065) as cut points to dichotomize the `dentist_grp` variable.  
-
+We will use the first quartile (0.028) and third quartile (0.065) as cut points to dichotomize the `dentist_grp` variable.
 
 ```{r}
 
@@ -272,8 +257,6 @@ chr_1 |> count(dentist_grp)
 
 ```
 
-
-
 ```{r}
 
 chr_1 <- chr_1 |>
@@ -286,7 +269,6 @@ chr_1 |> count(dentist_n)
 
 We have 777 counties in each group.
 
-
 ## Numeric Summaries Before Imputation
 
 ```{r}
@@ -295,8 +277,7 @@ describe(chr_1)
 
 ```
 
-
-## Dealing with Missingness 
+## Dealing with Missingness
 
 ```{r}
 
@@ -304,8 +285,7 @@ miss_var_summary(chr_1)
 
 ```
 
-The `segregation` variable constitutes 33.4% of the missing data, followed by highschool_grd (21.2%),  `mental_care` (5.79%), `primary_care` (4.91%), life_expectancy (2.28%), `food_index` (1.10%). Other variables with minimal missingness (<1%) include `income_inequality`, `housing_burden`, `insuff_sleep`, `uninsured`, `unemployment`, `household_income`. 
-
+The `segregation` variable constitutes 33.4% of the missing data, followed by highschool_grd (21.2%), `mental_care` (5.79%), `primary_care` (4.91%), life_expectancy (2.28%), `food_index` (1.10%). Other variables with minimal missingness (\<1%) include `income_inequality`, `housing_burden`, `insuff_sleep`, `uninsured`, `unemployment`, `household_income`.
 
 ### Filter Complete Cases For Exposure `dentist_prop`
 
@@ -325,8 +305,7 @@ n_miss(chr_simp$dentist_n)
 
 ```
 
-The outcome variable has no missing values. Now we will deal with the missing values in the covariates. 
-
+The outcome variable has no missing values. Now we will deal with the missing values in the covariates.
 
 ### Single Imputation for Covariates
 
@@ -341,7 +320,6 @@ chr_simp <-
 
 ```
 
-
 ```{r}
 
 miss_var_summary(chr_simp)
@@ -350,11 +328,9 @@ miss_var_summary(chr_simp)
 
 There are no missing observation in the semi-final working data set `chr_simp`.
 
-
 # Final Variable Selection
 
 ## Check Correlation
-
 
 ```{r}
 
@@ -366,17 +342,13 @@ res
 
 The variables with a correlation of 0.8 or more (or -0.8 or less) are:
 
+-   **poor_health** with `poor_physical`, `life_expectancy`, `diabetes`, `inactivity`, and `obesity`
 
-- **poor_health** with `poor_physical`, `life_expectancy`, `diabetes`, `inactivity`, and `obesity`
+-   **poor_physical** with `poor_mental`, `life_expectancy`, `diabetes`, and `inactivity`
 
-- **poor_physical** with `poor_mental`, `life_expectancy`, `diabetes`, and `inactivity`
+-   **diabetes** with `inactivity`
 
-- **diabetes** with `inactivity`
-
-
-
-> The variables that exhibited high correlation with the outcome `smoking_prop` will be removed from the analysis (`poor_health`, `poor_physical`, and `diabetes`).  
-
+> The variables that exhibited high correlation with the outcome `smoking_prop` will be removed from the analysis (`poor_health`, `poor_physical`, and `diabetes`).
 
 ```{r}
 
@@ -386,7 +358,6 @@ chr_fin <- chr_simp |>
 dim(chr_fin)
 
 ```
-
 
 # Table 1
 
@@ -425,15 +396,13 @@ knitr::kable(
 
 ```
 
-The low dentist group counties have more proportions of uninsured populations (0.13 vs 0.09 ), lower college education (0.54 vs 0.67), lower life expectancy (74.9 vs 77.3), more rural areas (0.89 vs 0.38), **more** `smoking prevalence` (18.8 vs 16.4) and **lower** `excessive drinking` (16.3 vs 18.8). 
-
-
+The low dentist group counties have more proportions of uninsured populations (0.13 vs 0.09 ), lower college education (0.54 vs 0.67), lower life expectancy (74.9 vs 77.3), more rural areas (0.89 vs 0.38), **more** `smoking prevalence` (18.8 vs 16.4) and **lower** `excessive drinking` (16.3 vs 18.8).
 
 # Propensity Score Assessment
 
 ## Calculating and Evaluating PS Balance
 
-To calculate the PS, we will build a logistic model with the binary exposure as the outcome and the covariates as the predictors. 
+To calculate the PS, we will build a logistic model with the binary exposure as the outcome and the covariates as the predictors.
 
 ```{r}
 
@@ -450,7 +419,6 @@ model_parameters(psmodel0) |>
 
 ```
 
-
 ### Saving Propesnsity Score
 
 ```{r}
@@ -460,7 +428,6 @@ chr_fin$ps0 <- psmodel0$fitted
 chr_fin$linps0 <- psmodel0$linear.predictors
 
 ```
-
 
 ### Comparing The PS Distribution of The Two Exposure Groups
 
@@ -472,7 +439,7 @@ df_stats(ps0 + linps0 ~ dentist_grp, data = chr_fin) |>
 
 ```
 
-> The propensity scores here are concerning. We will need to observe the value of inflation to observe potential collinearity between the covariates. 
+> The propensity scores here are concerning. We will need to observe the value of inflation to observe potential collinearity between the covariates.
 
 The VIF:
 
@@ -489,9 +456,7 @@ vif(vif_model)
 
 ```
 
-While most of the variables have low variance inflation factors, there are a few with an extremely high values (>10), which presents serious multi-collinearity. These variables are `hispanic`, `white`, `black`, and `native`. We will remove these variables from our analysis. 
-
-
+While most of the variables have low variance inflation factors, there are a few with an extremely high values (\>10), which presents serious multi-collinearity. These variables are `hispanic`, `white`, `black`, and `native`. We will remove these variables from our analysis.
 
 ### Fixed Propensity Score
 
@@ -503,7 +468,6 @@ chr_fin1 <- chr_fin|>
   dplyr::select(-hispanic, -white, -black, -native, -ps0, -linps0)
 
 ```
-
 
 Next, we will build the new model:
 
@@ -522,7 +486,6 @@ model_parameters(psmodel00) |>
 
 ```
 
-
 ### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -535,7 +498,6 @@ chr_fin1$linps00 <- psmodel00$linear.predictors
 
 ```
 
-
 ### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -546,13 +508,11 @@ df_stats(ps00 + linps00 ~ dentist_grp, data = chr_fin1) |>
 
 ```
 
-> The propensity scores slightly improved after removing the variables with high collinearity values. However, the problem with their values being too close to 0 or 1 is visibly persistent. 
-
-
+> The propensity scores slightly improved after removing the variables with high collinearity values. However, the problem with their values being too close to 0 or 1 is visibly persistent.
 
 #### Fixed Propensity Score - Part 2
 
-We will attempt to observe the impact of each covariate on the outcome individually to rule out the variable(s) that impacted the PS values. 
+We will attempt to observe the impact of each covariate on the outcome individually to rule out the variable(s) that impacted the PS values.
 
 ##### `poor_mental`
 
@@ -567,7 +527,6 @@ model_parameters(psmodel_pm) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -580,7 +539,6 @@ chr_fin1$linps_pm <- psmodel_pm$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -592,9 +550,6 @@ df_stats(ps_pm + linps_pm ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `poor_mental` variable looks has two linear PS less than 0.01 and above 1.
-
-
-
 
 ##### `food_index`
 
@@ -609,7 +564,6 @@ model_parameters(psmodel_fi) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -622,7 +576,6 @@ chr_fin1$linps_fi <- psmodel_fi$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -634,8 +587,6 @@ df_stats(ps_fi + linps_fi ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `food_index` variable has two linear PS less than 0.01 and above 1. All PS values are close to 0.99 or above, therefore, it will be removed.
-
-
 
 ##### `uninsured`
 
@@ -650,7 +601,6 @@ model_parameters(psmodel_un) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -663,7 +613,6 @@ chr_fin1$linps_un <- psmodel_un$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -675,9 +624,6 @@ df_stats(ps_un + linps_un ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `uninsured` variable has two linear PS less than 0.01 and above 1. All PS values are close to 0.99 or above, therefore, it will be removed.
-
-
-
 
 ##### `income_inequality`
 
@@ -692,7 +638,6 @@ model_parameters(psmodel_ii) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -705,7 +650,6 @@ chr_fin1$linps_ii <- psmodel_ii$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -717,9 +661,6 @@ df_stats(ps_ii + linps_ii ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `income_inequality` has two linear propensity scores less than 0.01 and above 1.
-
-
-
 
 ##### `primary_care`
 
@@ -734,8 +675,7 @@ model_parameters(psmodel_pc) |>
 
 ```
 
-This variable has an exploding coefficient. 
-
+This variable has an exploding coefficient.
 
 ##### Saving Propesnsity Score
 
@@ -749,7 +689,6 @@ chr_fin1$linps_pc <- psmodel_pc$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -760,10 +699,7 @@ df_stats(ps_pc + linps_pc ~ dentist_grp, data = chr_fin1) |>
 
 ```
 
-The `primary_care` variable has all propensity scores as less than 0.01 and above 1. This variable will be removed from the analysis. 
-
-
-
+The `primary_care` variable has all propensity scores as less than 0.01 and above 1. This variable will be removed from the analysis.
 
 ##### `mental_care`
 
@@ -778,7 +714,6 @@ model_parameters(psmodel_mc) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -791,7 +726,6 @@ chr_fin1$linps_mc <- psmodel_mc$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -803,9 +737,6 @@ df_stats(ps_mc + linps_mc ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `mental_care` variable has all ps values smaller than 0.01 and above 1. This variable will be removed from the analysis.
-
-
-
 
 ##### `highschool_grad`
 
@@ -820,7 +751,6 @@ model_parameters(psmodel_hs) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -833,7 +763,6 @@ chr_fin1$linps_hs <- psmodel_hs$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -844,10 +773,7 @@ df_stats(ps_hs + linps_hs ~ dentist_grp, data = chr_fin1) |>
 
 ```
 
-The `highschool_grad` variable has two PS value less than 0.01, but overall looks acceptable. 
-
-
-
+The `highschool_grad` variable has two PS value less than 0.01, but overall looks acceptable.
 
 ##### `some_college`
 
@@ -862,7 +788,6 @@ model_parameters(psmodel_sc) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -875,7 +800,6 @@ chr_fin1$linps_sc <- psmodel_sc$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -887,9 +811,6 @@ df_stats(ps_sc + linps_sc ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `some_college` variable has two linear PS value less than 0.01 and 3 above 0.99. This variable will be removed.
-
-
-
 
 ##### `unemployment`
 
@@ -904,7 +825,6 @@ model_parameters(psmodel_ue) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -917,7 +837,6 @@ chr_fin1$linps_ue <- psmodel_ue$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -928,10 +847,7 @@ df_stats(ps_ue + linps_ue ~ dentist_grp, data = chr_fin1) |>
 
 ```
 
-The `unemployment` variable has two linear PS values less than 0.01, but overall looks acceptable.  
-
-
-
+The `unemployment` variable has two linear PS values less than 0.01, but overall looks acceptable.
 
 ##### `social_score`
 
@@ -946,7 +862,6 @@ model_parameters(psmodel_ss) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -959,7 +874,6 @@ chr_fin1$linps_ss <- psmodel_ss$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -971,8 +885,6 @@ df_stats(ps_ss + linps_ss ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `social_score` has two linear PS values less than 0.01, but overall looks acceptable.
-
-
 
 ##### `life_expectancy`
 
@@ -987,7 +899,6 @@ model_parameters(psmodel_le) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1000,7 +911,6 @@ chr_fin1$linps_le <- psmodel_le$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1011,10 +921,7 @@ df_stats(ps_le + linps_le ~ dentist_grp, data = chr_fin1) |>
 
 ```
 
-The `life_expectancy` variable has two linear PS less than 0.01 and above 1. The other PS values are also problematic, therefore, it will be removed.  
-
-
-
+The `life_expectancy` variable has two linear PS less than 0.01 and above 1. The other PS values are also problematic, therefore, it will be removed.
 
 ##### `insuff_sleep`
 
@@ -1029,7 +936,6 @@ model_parameters(psmodel_is) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1042,7 +948,6 @@ chr_fin1$linps_is <- psmodel_is$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1054,9 +959,6 @@ df_stats(ps_is + linps_is ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `insuff_sleep` variable has two linear PS less than 0.01 and above 1.
-
-
-
 
 ##### `home_ownership`
 
@@ -1071,7 +973,6 @@ model_parameters(psmodel_ho) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1084,7 +985,6 @@ chr_fin1$linps_ho <- psmodel_ho$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1096,9 +996,6 @@ df_stats(ps_ho + linps_ho ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `home_ownership` variable has all PS values in problematic levels. Therefore, it will be removed.
-
-
-
 
 ##### `housing_burden`
 
@@ -1113,7 +1010,6 @@ model_parameters(psmodel_hb) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1126,7 +1022,6 @@ chr_fin1$linps_hb <- psmodel_hb$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1138,9 +1033,6 @@ df_stats(ps_hb + linps_hb ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `housing_burden` variable has two linear PS less than 0.01 and above 1. All PS values are close to 0.99 or above, therefore, it will be removed.
-
-
-
 
 ##### `below_18`
 
@@ -1155,7 +1047,6 @@ model_parameters(psmodel_b18) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1168,7 +1059,6 @@ chr_fin1$linps_b18 <- psmodel_b18$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1180,9 +1070,6 @@ df_stats(ps_b18 + linps_b18 ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `below_18` variable has two linear PS values less than 0.01 (0.00). Otherwise it looks acceptable.
-
-
-
 
 ##### `above_65`
 
@@ -1197,7 +1084,6 @@ model_parameters(psmodel_a65) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1210,7 +1096,6 @@ chr_fin1$linps_a65 <- psmodel_a65$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1222,9 +1107,6 @@ df_stats(ps_a65 + linps_a65 ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `above_65` variable has two linear PS less than 0.01 and above 1.
-
-
-
 
 ##### `asian`
 
@@ -1239,7 +1121,6 @@ model_parameters(psmodel_as) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1252,7 +1133,6 @@ chr_fin1$linps_as <- psmodel_as$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1264,9 +1144,6 @@ df_stats(ps_as + linps_as ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `asian` variable has multiple PS values in problematic levels, therefore, it will be removed.
-
-
-
 
 ##### `female`
 
@@ -1281,7 +1158,6 @@ model_parameters(psmodel_fm) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1294,7 +1170,6 @@ chr_fin1$linps_fm <- psmodel_fm$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1306,8 +1181,6 @@ df_stats(ps_fm + linps_fm ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `female` variable has two linear PS less than 0.01 all PS values at or above 0.99. Therefore, it will be removed.
-
-
 
 ##### `rural`
 
@@ -1322,7 +1195,6 @@ model_parameters(psmodel_rl) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1335,7 +1207,6 @@ chr_fin1$linps_rl <- psmodel_rl$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1347,9 +1218,6 @@ df_stats(ps_rl + linps_rl ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `rural` variable has two linear PS less than 0.01 and value above 1. We might remove this variable.
-
-
-
 
 ##### `obesity`
 
@@ -1364,7 +1232,6 @@ model_parameters(psmodel_ob) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1377,7 +1244,6 @@ chr_fin1$linps_ob <- psmodel_ob$linear.predictors
 
 ```
 
-
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
 ```{r}
@@ -1389,8 +1255,6 @@ df_stats(ps_ob + linps_ob ~ dentist_grp, data = chr_fin1) |>
 ```
 
 The `obesity` variable has two linear PS less than 0.01 and all PS values around 0.99. We will remove this variable.
-
-
 
 ##### `segregation`
 
@@ -1405,7 +1269,6 @@ model_parameters(psmodel_se) |>
 
 ```
 
-
 ##### Saving Propesnsity Score
 
 Now we will save the new propensity scores:
@@ -1417,7 +1280,6 @@ chr_fin1$ps_se <- psmodel_se$fitted
 chr_fin1$linps_se <- psmodel_se$linear.predictors
 
 ```
-
 
 ##### Comparing The PS Distribution of The Two Exposure Groups
 
@@ -1431,15 +1293,9 @@ df_stats(ps_se + linps_se ~ dentist_grp, data = chr_fin1) |>
 
 The `segregation` variable has two linear PS less than 0.01 and all PS values around 0.99. We might remove this variable.
 
-
-
-
-
-
-
 ### PS After Covariates Removal
 
-We will start by building a subset for the first outcome in our analysis `chr_fin2` after removing the problematic covariates from the original `chr_fin` set. 
+We will start by building a subset for the first outcome in our analysis `chr_fin2` after removing the problematic covariates from the original `chr_fin` set.
 
 ```{r}
 
@@ -1447,7 +1303,6 @@ chr_fin2 <- chr_fin|>
   dplyr::select( -hispanic, -white, -black, -native, -ps0, -linps0, -food_index, -uninsured, -primary_care, -mental_care, -some_college, -life_expectancy, -housing_burden, -home_ownership, -female, -rural, -asian, -obesity)
 
 ```
-
 
 Now, we will build our `psmodel1`.
 
@@ -1464,7 +1319,6 @@ model_parameters(psmodel1) |>
 
 ```
 
-
 ```{r}
 
 chr_fin2$ps1 <- psmodel1$fitted
@@ -1472,7 +1326,6 @@ chr_fin2$ps1 <- psmodel1$fitted
 chr_fin2$linps1 <- psmodel1$linear.predictors
 
 ```
-
 
 ```{r}
 
@@ -1482,14 +1335,9 @@ df_stats(ps1 + linps1 ~ dentist_grp, data = chr_fin2) |>
 
 ```
 
-
 > The problematic values in the propensity score are persistent and we will need to investigate this using other methods. For now, we will proceed to the analysis phase.
 
-
-
-
 # Outcome 1 Analysis
-
 
 ## The Blanace Before PS Adjustment
 
@@ -1502,8 +1350,6 @@ ggplot(chr_fin2, aes(x = dentist_grp, y = ps1, color = dentist_grp)) +
 
 ```
 
-
-
 ```{r}
 
 ggplot(chr_fin2, aes(x = linps1, fill = dentist_grp)) +
@@ -1511,9 +1357,7 @@ ggplot(chr_fin2, aes(x = linps1, fill = dentist_grp)) +
 
 ```
 
-> There is a good overlap between the two groups. 
-
-
+> There is a good overlap between the two groups.
 
 ### Rubin's Rule 1
 
@@ -1527,7 +1371,6 @@ rubin1.unadj
 
 The absolute value of the standardized difference of the linear propensity score comparing the counties with high dentist proportions and low dentist proportions is 114.8%. This value is too far from the ideal value of 0% and above the maximum acceptable value of 50 %. We definitely do not pass Rubin's rule 1, therefore, propensity score adjustment is needed.
 
-
 ### Rubin's Rule 2
 
 ```{r}
@@ -1536,9 +1379,8 @@ rubin2.unadj <-with(chr_fin2, var(linps1[dentist_n==1])/var(linps1[dentist_n==0]
 rubin2.unadj
 
 ```
-The ratio of variances of the linear propensity score comparing the counties with high dentist proportions and low dentist proportions is 0.98. This value is very close to the desired value of 1.0. In this case, we pass Rubin's Rule 2. 
 
-
+The ratio of variances of the linear propensity score comparing the counties with high dentist proportions and low dentist proportions is 0.98. This value is very close to the desired value of 1.0. In this case, we pass Rubin's Rule 2.
 
 ## Unadjusted Outcome 1 `smoking_prop`
 
@@ -1554,10 +1396,9 @@ df_stats(smoking_prop ~ dentist_grp, data = chr_fin2) |>
 
 The high dentist group has a lower mean of smoking proportions (16.4 vs 18.8).
 
-
 ### Linear Regression Model for Outcome 1
 
-We will build a linear regression model for outcome 1 `smoking_prop` and the exposure `dentist_prop` without including the covariates. 
+We will build a linear regression model for outcome 1 `smoking_prop` and the exposure `dentist_prop` without including the covariates.
 
 ```{r}
 
@@ -1569,13 +1410,11 @@ model_parameters(unadj.out1, ci = 0.95) |>
 
 ```
 
-> The unadjusted model estimates that low dentist proportions increases smoking prevalence in US counties by 2.36 percentage points (95% CI: 1.99, 2.73). 
+> The unadjusted model estimates that low dentist proportions increases smoking prevalence in US counties by 2.36 percentage points (95% CI: 1.99, 2.73).
 
+## 1:1 Matching With Replacement
 
-
-## 1:1 Matching With Replacement 
-
-The binary exposure has an equal number of observations in each group (n=777). Therefore, we will use 1:1 matching with replacement. 
+The binary exposure has an equal number of observations in each group (n=777). Therefore, we will use 1:1 matching with replacement.
 
 ```{r}
 
@@ -1585,7 +1424,6 @@ match1 <- Match(Tr=Tr, X=X, M = 1, replace = TRUE, ties=FALSE)
 summary(match1)
 
 ```
-
 
 checking if matching worked:
 
@@ -1600,11 +1438,9 @@ n_distinct(match1$index.treated)
 n_distinct(match1$index.control)
 ```
 
-> After 1:1 matching with replacement, the effective size was reduced to 272 matched counties from the treatment and control group. 
+> After 1:1 matching with replacement, the effective size was reduced to 272 matched counties from the treatment and control group.
 
-
-
-### Balance Assessment 
+### Balance Assessment
 
 ```{r}
 
@@ -1617,11 +1453,9 @@ mb1 <- MatchBalance(dentist_n ~ poor_mental + unemployment  + income_inequality 
 
 ```
 
-
-
 ### Tabulating Standardized Differences
 
-We will name the covariates used in our model. 
+We will name the covariates used in our model.
 
 ```{r}
 
@@ -1630,7 +1464,6 @@ covnames <- c( "poor_mental", "unemployment", "income_inequality", "social_score
                   "below_18", "above_65", "raw PS", "linear PS") 
 
 ```
-
 
 Then we will extract the standardized differences.
 
@@ -1644,7 +1477,6 @@ for(i in 1:length(covnames)) {
 
 ```
 
-
 Now, we can have our final table.
 
 ```{r}
@@ -1654,12 +1486,11 @@ match_szd
 
 ```
 
-We will use these results to build the love plot to better visualize the standardized differences. 
-
+We will use these results to build the love plot to better visualize the standardized differences.
 
 ### Visualizing Standardized Differences
 
-We will use the cobalt method to build plots for the standardized differences and the variance ratios. 
+We will use the cobalt method to build plots for the standardized differences and the variance ratios.
 
 ```{r}
 
@@ -1673,8 +1504,7 @@ b
 
 ```
 
-> As previously mentioned, the effective size after 1:1 matching with replacement is 278 counties. We lost 499 counties from the sample because they were unmatched. 
-
+> As previously mentioned, the effective size after 1:1 matching with replacement is 278 counties. We lost 499 counties from the sample because they were unmatched.
 
 Now we will build the love plot for the standardized differences:
 
@@ -1687,11 +1517,9 @@ lplot1
 
 ```
 
-> All covariates have improved standardized difference after 1:1 matching adjustment, with the exception for `social_score.`  
+> All covariates have improved standardized difference after 1:1 matching adjustment, with the exception for `social_score.`
 
-
-
-Plot of Variance Ratios 
+Plot of Variance Ratios
 
 ```{r}
 
@@ -1705,7 +1533,6 @@ lplot2 + theme_bw()
 
 Most of the covariates displayed improved variance ratios with the exception of `income_inequality`, `highschool_grad`, `insuff_sleep`, and `above_65`.
 
-
 ### Building New Data Frame with Matched Sample
 
 ```{r}
@@ -1715,18 +1542,15 @@ chr.matchedsample1 <- cbind(matches1, chr_fin2[c(match1$index.control, match1$in
 
 ```
 
-
 ```{r}
 
 chr.matchedsample1 |> count(dentist_grp)
 
 ```
 
-Because the 1:1 matching method we used includes *replacement*, it is only natural to retain the original number of observations in the exposure groups. 
+Because the 1:1 matching method we used includes *replacement*, it is only natural to retain the original number of observations in the exposure groups.
 
-
-
-### Rubin's Rules After Matching 
+### Rubin's Rules After Matching
 
 First, we will check Rubin's Rule 1:
 
@@ -1740,7 +1564,6 @@ rubin1.match1
 
 > The absolute value of the standardized difference of the linear propensity score before adjustment was 114.8%. The value after adjustment (52.76%) shows substantial improvement as it is close to the maximum value of 50%, but the value remains above 10% and is not close to 0%. In this case, we barely pass Rubin's Rule 1.
 
-
 Next, we will check Rubin's Rule 2:
 
 ```{r}
@@ -1750,14 +1573,11 @@ rubin2.match1
 
 ```
 
-> The previous ratio of the variance of the linear propensity score was 0.98. This value also shows mild improvement where the value is closer to 1 and remains below 2. We also pass Rubin's Rule 2 and can proceed to use the results of this PS adjustment to measure the estimates. 
-
-
+> The previous ratio of the variance of the linear propensity score was 0.98. This value also shows mild improvement where the value is closer to 1 and remains below 2. We also pass Rubin's Rule 2 and can proceed to use the results of this PS adjustment to measure the estimates.
 
 ### Estimating Effect of Exposure on Outcome After 1:1 Matching
 
-We will use the ATT (Average Treatment Effect on the Treated) estimate to measure the dentist proportion effect on smoking prevalence in US Counties. 
-First, we will need to create a data frame out of the matched sample:
+We will use the ATT (Average Treatment Effect on the Treated) estimate to measure the dentist proportion effect on smoking prevalence in US Counties. First, we will need to create a data frame out of the matched sample:
 
 ```{r}
 
@@ -1781,10 +1601,7 @@ tidy_matched_mix.mod1 |> kable(digits = 3)
 
 ```
 
-> After 1:1 matching with replacement, our model estimates the effect of low dentists proportions on smoking prevalence in US counties to increase by 0.78 percentage points (95% CI: 0.39, 1.16). Our confidence interval does not include 0, therefore, following up with a sensitivity analysis is a reasonable choice. 
-
-
-
+> After 1:1 matching with replacement, our model estimates the effect of low dentists proportions on smoking prevalence in US counties to increase by 0.78 percentage points (95% CI: 0.39, 1.16). Our confidence interval does not include 0, therefore, following up with a sensitivity analysis is a reasonable choice.
 
 ## Use ATT Weighting Adjustment
 
@@ -1796,8 +1613,7 @@ chrfin_df <- base::data.frame(chr_fin2)
 
 ```
 
-
-Now, we will calculate the propensity score using the `ps` function from the `twang` package. 
+Now, we will calculate the propensity score using the `ps` function from the `twang` package.
 
 ```{r}
 
@@ -1813,7 +1629,6 @@ ps.chr <- twang::ps(dentist_n ~ poor_mental + unemployment  + income_inequality 
 
 ```
 
-
 Checking the iteration:
 
 ```{r}
@@ -1822,8 +1637,7 @@ plot(ps.chr)
 
 ```
 
-> We can see that we have run enough iterations to reach a stable estimate. 
-
+> We can see that we have run enough iterations to reach a stable estimate.
 
 Observing the effective sample size of the weighted estimates:
 
@@ -1833,10 +1647,9 @@ summary(ps.chr)
 
 ```
 
-> The effective size after ATT weighting is 163 counties. 
+> The effective size after ATT weighting is 163 counties.
 
-
-### Checking the balance 
+### Checking the balance
 
 ```{r}
 
@@ -1844,17 +1657,15 @@ plot(ps.chr, plots = 2)
 
 ```
 
-
 ```{r}
 
 plot(ps.chr, plots = 3)
 
 ```
 
-> We can see that the weighted estimates have an absolute standard differences are below 0.5 and are closer to 0 compared to the unadjusted estimates. 
+> We can see that the weighted estimates have an absolute standard differences are below 0.5 and are closer to 0 compared to the unadjusted estimates.
 
-
-We can also assess the balance using the cobalt method. 
+We can also assess the balance using the cobalt method.
 
 ```{r}
 
@@ -1865,9 +1676,7 @@ b2
 
 ```
 
-
-
-We will visualize the standardized differences using the Love plot. 
+We will visualize the standardized differences using the Love plot.
 
 ```{r}
 
@@ -1879,7 +1688,6 @@ lplot3
 ```
 
 > All of the variables have observable improved standardized difference after TWANG ATT weighting adjustment.
-
 
 Visualizing the variance ratio:
 
@@ -1894,8 +1702,6 @@ lplot4 + theme_bw()
 
 Most of the variables show some improvement in the variance ration after adjustment, though it is not very satisfying.
 
-
-
 ### Estimating The Causal Effect After ATT Weight Adjustment
 
 First, we will build the weight reference `wts1` (which is the inverse propensity score) and add it to our data set `chr_out1`.
@@ -1905,7 +1711,6 @@ First, we will build the weight reference `wts1` (which is the inverse propensit
 chr_fin2$wts1 <- ifelse(chr_fin2$dentist_n==1, 1, chr_fin2$ps1/(1-chr_fin2$ps1))
 
 ```
-
 
 ```{r}
 
@@ -1919,14 +1724,9 @@ wt_att_results1
 
 ```
 
-> After ATT weight adjustment, the estimated impact of low dentist proportions on smoking prevalence in US counties is decrease of -0.43 percentage points (95% CI: -2.57, 1.71). 
+> After ATT weight adjustment, the estimated impact of low dentist proportions on smoking prevalence in US counties is decrease of -0.43 percentage points (95% CI: -2.57, 1.71).
 
-
-
-
-
-## Use Double Robust Adjustment 
-
+## Use Double Robust Adjustment
 
 ```{r}
 
@@ -1940,13 +1740,9 @@ dr_att_out1
 
 ```
 
-> After Double Robust adjustment, the estimated impact of low dentist proportions on smoking prevalence in US counties is an increase of 0.72 percentage points (95% CI: -0.17, 1.61). These results are slightly different from the ATT Weighting results. 
+> After Double Robust adjustment, the estimated impact of low dentist proportions on smoking prevalence in US counties is an increase of 0.72 percentage points (95% CI: -0.17, 1.61). These results are slightly different from the ATT Weighting results.
 
-
-
-
-## Compare Results 
-
+## Compare Results
 
 ```{r}
 
@@ -1962,13 +1758,11 @@ ggplot(chr_results, aes(x = analysis, y = estimate)) +
 
 ```
 
-> We can see that propensity score adjustment decreased the estimated affect of dentist proportions on smoking prevalence in US counties (from 2.36% to about 0.7-0.8%) . While two of the three adjustments present close estimates, the 1:1 matching with replacement adjustment displays the smallest confidence interval, the best  balance, and largest effective size (278 after 1:1 matching compared to 163 after ATT weighting). 
-
-
+> We can see that propensity score adjustment decreased the estimated affect of dentist proportions on smoking prevalence in US counties (from 2.36% to about 0.7-0.8%) . While two of the three adjustments present close estimates, the 1:1 matching with replacement adjustment displays the smallest confidence interval, the best balance, and largest effective size (278 after 1:1 matching compared to 163 after ATT weighting).
 
 ## Sensitivity Analysis
 
-The estimate produced from the 1:1 Matching with replacement has a statistically significant p-value. Therefore, we will need to perform a sensitivity analysis. 
+The estimate produced from the 1:1 Matching with replacement has a statistically significant p-value. Therefore, we will need to perform a sensitivity analysis.
 
 ```{r}
 
@@ -1980,13 +1774,7 @@ psens(Rt, Rc, Gamma = 5, GammaInc = 0.25)
 
 ```
 
-Our conclusions regarding the impact of low dentists proportions increasing smoking prevalence in US counties hold true in absence of biases in the study. This conclusion is maintained in the presence of a biases level between L= 1.00 and L= 1.25. This means that only *small hidden bias* is needed to change our conclusions. 
-
-
-
-
-
-
+Our conclusions regarding the impact of low dentists proportions increasing smoking prevalence in US counties hold true in absence of biases in the study. This conclusion is maintained in the presence of a biases level between L= 1.00 and L= 1.25. This means that only *small hidden bias* is needed to change our conclusions.
 
 # Outcome 2 Analysis
 
@@ -2004,10 +1792,9 @@ df_stats(drinking_prop ~ dentist_grp, data = chr_fin2) |>
 
 The low dentist group has a lower mean of excessive drinking prevalence (16.3 vs 18.8).
 
-
 ### Linear Regression Model for Outcome 2
 
-We will build a linear regression model for outcome 2 `drinking_prop` and the exposure `dentist_grp` without including the covariates. 
+We will build a linear regression model for outcome 2 `drinking_prop` and the exposure `dentist_grp` without including the covariates.
 
 ```{r}
 
@@ -2019,13 +1806,11 @@ model_parameters(unadj.out2, ci = 0.95) |>
 
 ```
 
-> The unadjusted model estimates that low dentist proportions decreases excessive drinking prevalence in US counties by 2.56 percentage points (95% CI: -2.87, -2.26). 
+> The unadjusted model estimates that low dentist proportions decreases excessive drinking prevalence in US counties by 2.56 percentage points (95% CI: -2.87, -2.26).
 
+## 1:1 Matching With Replacement
 
-
-## 1:1 Matching With Replacement 
-
-The binary exposure has an equal number of observations in each group (n=777). Therefore, we will use 1:1 matching with replacement. 
+The binary exposure has an equal number of observations in each group (n=777). Therefore, we will use 1:1 matching with replacement.
 
 ```{r}
 
@@ -2035,7 +1820,6 @@ match2 <- Match(Tr=Tr, X=X, M = 1, replace = TRUE, ties=FALSE)
 summary(match2)
 
 ```
-
 
 checking if matching worked:
 
@@ -2050,11 +1834,9 @@ n_distinct(match2$index.treated)
 n_distinct(match2$index.control)
 ```
 
-> After 1:1 matching with replacement, the effective size was reduced to 269 matched counties from the low dentist and high dentist groups. 
+> After 1:1 matching with replacement, the effective size was reduced to 269 matched counties from the low dentist and high dentist groups.
 
-
-
-### Balance Assessment 
+### Balance Assessment
 
 ```{r}
 
@@ -2067,11 +1849,9 @@ mb2 <- MatchBalance(dentist_n ~ poor_mental + unemployment  + income_inequality 
 
 ```
 
-
-
 ### Tabulating Standardized Differences
 
-We will name the covariates used in our model. 
+We will name the covariates used in our model.
 
 ```{r}
 
@@ -2080,7 +1860,6 @@ covnames2 <- c( "poor_mental", "unemployment", "income_inequality", "social_scor
                   "below_18", "above_65", "raw PS", "linear PS") 
 
 ```
-
 
 Then we will extract the standardized differences.
 
@@ -2094,7 +1873,6 @@ for(i in 1:length(covnames2)) {
 
 ```
 
-
 Now, we can have our final table.
 
 ```{r}
@@ -2104,12 +1882,11 @@ match_szd2
 
 ```
 
-We will use these results to build the love plot to better visualize the standardized differences. 
-
+We will use these results to build the love plot to better visualize the standardized differences.
 
 ### Visualizing Standardized Differences
 
-We will use the cobalt method to build plots for the standardized differences and the variance ratios. 
+We will use the cobalt method to build plots for the standardized differences and the variance ratios.
 
 ```{r}
 
@@ -2123,8 +1900,7 @@ b2
 
 ```
 
-> As previously mentioned, the effective size after 1:1 matching with replacement is 269 counties. We lost 508 counties from the sample because they were unmatched. 
-
+> As previously mentioned, the effective size after 1:1 matching with replacement is 269 counties. We lost 508 counties from the sample because they were unmatched.
 
 Now we will build the love plot for the standardized differences:
 
@@ -2137,11 +1913,9 @@ lplot5
 
 ```
 
-> All covariates have improved standardized difference after 1:1 matching adjustment, with the exception for `social_score.`  
+> All covariates have improved standardized difference after 1:1 matching adjustment, with the exception for `social_score.`
 
-
-
-Plot of Variance Ratios 
+Plot of Variance Ratios
 
 ```{r}
 
@@ -2155,7 +1929,6 @@ lplot6 + theme_bw()
 
 Most of the covariates displayed improved variance ratios with the exception of `highschool_grad`, `insuff_sleep`, `unemployment`, and `above_65`.
 
-
 ### Building New Data Frame with Matched Sample
 
 ```{r}
@@ -2165,18 +1938,15 @@ chr.matchedsample2 <- cbind(matches2, chr_fin2[c(match2$index.control, match2$in
 
 ```
 
-
 ```{r}
 
 chr.matchedsample2 |> count(dentist_grp)
 
 ```
 
-Because the 1:1 matching method we used includes *replacement*, it is only natural to retain the original number of observations in the exposure groups. 
+Because the 1:1 matching method we used includes *replacement*, it is only natural to retain the original number of observations in the exposure groups.
 
-
-
-### Rubin's Rules After Matching 
+### Rubin's Rules After Matching
 
 First, we will check Rubin's Rule 1:
 
@@ -2190,7 +1960,6 @@ rubin1.match2
 
 > The absolute value of the standardized difference of the linear propensity score before adjustment was 114.8%. The value after adjustment (52.03%) shows substantial improvement, however the value is above 10% and far from to 0%. In this case, we barely pass Rubin's Rule 1.
 
-
 Next, we will check Rubin's Rule 2:
 
 ```{r}
@@ -2200,14 +1969,11 @@ rubin2.match2
 
 ```
 
-> The previous ratio of the variance of the linear propensity score was 0.98. This value also shows mild improvement where the value is closer to 1 (1.03) and remains below 2. We also pass Rubin's Rule 2 and can proceed to use the results of this PS adjustment to measure the estimates. 
-
-
+> The previous ratio of the variance of the linear propensity score was 0.98. This value also shows mild improvement where the value is closer to 1 (1.03) and remains below 2. We also pass Rubin's Rule 2 and can proceed to use the results of this PS adjustment to measure the estimates.
 
 ### Estimating Effect of Exposure on Outcome After 1:1 Matching
 
-We will use the ATT (Average Treatment Effect on the Treated) estimate to measure the dentist proportion effect on smoking prevalence in US Counties. 
-First, we will need to create a data frame out of the matched sample:
+We will use the ATT (Average Treatment Effect on the Treated) estimate to measure the dentist proportion effect on smoking prevalence in US Counties. First, we will need to create a data frame out of the matched sample:
 
 ```{r}
 
@@ -2231,10 +1997,7 @@ tidy_matched_mix.mod2 |> kable(digits = 3)
 
 ```
 
-> After 1:1 matching with replacement, our model estimates the effect of low dentists proportions on excessive drinking prevalence in US counties to increase by 0.40 percentage points (95% CI: 0.16, 0.64). Our confidence interval does not include 0, therefore, following up with a sensitivity analysis is a reasonable choice. 
-
-
-
+> After 1:1 matching with replacement, our model estimates the effect of low dentists proportions on excessive drinking prevalence in US counties to increase by 0.40 percentage points (95% CI: 0.16, 0.64). Our confidence interval does not include 0, therefore, following up with a sensitivity analysis is a reasonable choice.
 
 ## Use ATT Weighting Adjustment
 
@@ -2246,8 +2009,7 @@ chrfin_df2 <- base::data.frame(chr_fin2)
 
 ```
 
-
-Now, we will calculate the propensity score using the `ps` function from the `twang` package. 
+Now, we will calculate the propensity score using the `ps` function from the `twang` package.
 
 ```{r}
 
@@ -2263,7 +2025,6 @@ ps.chr2 <- twang::ps(dentist_n ~ poor_mental + unemployment  + income_inequality
 
 ```
 
-
 Checking the iteration:
 
 ```{r}
@@ -2272,8 +2033,7 @@ plot(ps.chr2)
 
 ```
 
-> We can see that we have run enough iterations to reach a stable estimate. 
-
+> We can see that we have run enough iterations to reach a stable estimate.
 
 Observing the effective sample size of the weighted estimates:
 
@@ -2283,10 +2043,9 @@ summary(ps.chr2)
 
 ```
 
-> The effective size after ATT weighting is 163 counties. 
+> The effective size after ATT weighting is 163 counties.
 
-
-### Checking the balance 
+### Checking the balance
 
 ```{r}
 
@@ -2294,17 +2053,15 @@ plot(ps.chr2, plots = 2)
 
 ```
 
-
 ```{r}
 
 plot(ps.chr2, plots = 3)
 
 ```
 
-> We can see that the weighted estimates have an absolute standard differences are below 0.5 and are closer to 0 compared to the unadjusted estimates. 
+> We can see that the weighted estimates have an absolute standard differences are below 0.5 and are closer to 0 compared to the unadjusted estimates.
 
-
-We can also assess the balance using the cobalt method. 
+We can also assess the balance using the cobalt method.
 
 ```{r}
 
@@ -2315,9 +2072,7 @@ b3
 
 ```
 
-
-
-We will visualize the standardized differences using the Love plot. 
+We will visualize the standardized differences using the Love plot.
 
 ```{r}
 
@@ -2329,7 +2084,6 @@ lplot7
 ```
 
 > All of the variables have observable improved standardized difference after TWANG ATT weighting adjustment.
-
 
 Visualizing the variance ratio:
 
@@ -2343,8 +2097,6 @@ lplot8 + theme_bw()
 ```
 
 Most of the variables show some improvement in the variance ration after adjustment, though it is not very satisfying.
-
-
 
 ### Estimating The Causal Effect After ATT Weight Adjustment
 
@@ -2360,13 +2112,9 @@ wt_att_results2
 
 ```
 
-> After ATT weight adjustment, the estimated impact of low dentist proportions on excessive drinking prevalence in US counties is an increase of 1.15 percentage points (95% CI: 0.13, 2.17). 
+> After ATT weight adjustment, the estimated impact of low dentist proportions on excessive drinking prevalence in US counties is an increase of 1.15 percentage points (95% CI: 0.13, 2.17).
 
-
-
-
-
-## Use Double Robust Adjustment 
+## Use Double Robust Adjustment
 
 We will use the previous double robust design `chr.dr.design`.
 
@@ -2380,13 +2128,9 @@ dr_att_out2
 
 ```
 
-> After Double Robust adjustment, the estimated impact of low dentist proportions on excessive drinking prevalence in US counties is a decrease of -0.11 percentage points (95% CI: -0.54, 0.33). These results are very different from the ATT Weighting results. 
+> After Double Robust adjustment, the estimated impact of low dentist proportions on excessive drinking prevalence in US counties is a decrease of -0.11 percentage points (95% CI: -0.54, 0.33). These results are very different from the ATT Weighting results.
 
-
-
-
-## Compare Results 
-
+## Compare Results
 
 ```{r}
 
@@ -2402,13 +2146,11 @@ ggplot(chr_results2, aes(x = analysis, y = estimate)) +
 
 ```
 
-> We can see that propensity score adjustment inversed the estimated affect of dentist proportions on excessive drinking prevalence in US counties (from -2.56% to 0.4-1.2%) . While two of the three adjustments present close estimates, the 1:1 matching with replacement adjustment displays the smallest confidence interval, the best  balance, and largest effective size (273 after 1:1 matching compared to 163 after ATT weighting). 
-
-
+> We can see that propensity score adjustment inversed the estimated affect of dentist proportions on excessive drinking prevalence in US counties (from -2.56% to 0.4-1.2%) . While two of the three adjustments present close estimates, the 1:1 matching with replacement adjustment displays the smallest confidence interval, the best balance, and largest effective size (273 after 1:1 matching compared to 163 after ATT weighting).
 
 ## Sensitivity Analysis
 
-The estimate produced from the 1:1 Matching with replacement has a statistically significant p-value. Therefore, we will need to perform a sensitivity analysis. 
+The estimate produced from the 1:1 Matching with replacement has a statistically significant p-value. Therefore, we will need to perform a sensitivity analysis.
 
 ```{r}
 
@@ -2420,19 +2162,15 @@ psens(Rt2, Rc2, Gamma = 5, GammaInc = 0.25)
 
 ```
 
-Our conclusions regarding the impact of low dentists proportions increasing excessive drinking prevalence in US counties hold true in absence of biases in the study. This conclusion is maintained in the presence of a biases level between L= 1.00 and L= 1.25. This means that only *small hidden bias* is needed to change our conclusions. 
+Our conclusions regarding the impact of low dentists proportions increasing excessive drinking prevalence in US counties hold true in absence of biases in the study. This conclusion is maintained in the presence of a biases level between L= 1.00 and L= 1.25. This means that only *small hidden bias* is needed to change our conclusions.
 
+# Discussion
 
+This study found that counties with low dentist proportions are associated with a small increase in smoking prevalence and excessive drinking prevalence among adults (0.78% and 0.4% respectively). Although these estimates provided a meaningful size effect, the sensitivity analysis concluded that our conclusions may change in the presence of small hidden bias (gamma between 1.0 and 1.25). The weak findings may be attributed to the existing low number of dentists per 1000 population in US counties. Despite the attempt to dichotomize the dentist variable by using the first and third quartiles (0.2 and 0.6 per 1000 population), the difference was not large enough to detect observable impact. It is also important to note that increased presence of dentists does not spontaneously reduce negative oral habits (smoking and excessive drinking). The quality care and accessibility of services is an important factor in improving oral health and other related health behaviors.
 
-# Discussion 
+This project emphasized the importance of using confounders to assess selection biases in observational studies. The difference in the exposure's effect estimates after propensity score adjustment was remarkable. While our initial belief was that having more covariates would improve the analysis, this project corrected that misconception. In our analysis, multiple covariates were dropped due to high correlation, collinearity, or for disrupting the propensity score values. Selecting and evaluating appropriate covariates was the most critical part for the propensity score analysis. To improve my study in the future, we will need to explore more variables from the County Health Rankings (CHR) as we may have missed other useful variables during the initial selection phase. Also, using the Health Professional Shortage Area classification (HPSA) instead of the number of dentists per population can provide a better assessment of the impact of dentist quantities on oral-related health behaviors in US counties.
 
-This study found that counties with low dentist proportions are associated with a small increase in smoking prevalence and excessive drinking prevalence among adults (0.78% and 0.4% respectively). Although these estimates provided a meaningful size effect, the sensitivity analysis concluded that our conclusions may change in the presence of small hidden bias (gamma between 1.0 and 1.25). The weak findings may be attributed to the existing low number of dentists per 1000 population in US counties. Despite the attempt to dichotomize the dentist variable by using the first and third quartiles (0.2 and 0.6 per 1000 population), the difference was not large enough to detect observable impact. It is also important to note that increased presence of dentists does not spontaneously reduce negative oral habits (smoking and excessive drinking). The quality care and accessibility of services is an important factor in improving oral health and other related health behaviors. 
-
-This project emphasized the importance of using confounders to assess selection biases in observational studies. The difference in the exposure's effect estimates after propensity score adjustment was remarkable. While our initial belief was that having more covariates would improve the analysis, this project corrected that misconception. In our analysis, multiple covariates were dropped due to high correlation, collinearity, or for disrupting the propensity score values. Selecting and evaluating appropriate covariates was the most critical part for the propensity score analysis. To improve my study in the future, we will need to explore more variables from the County Health Rankings (CHR) as we may have missed other useful variables during the initial selection phase. Also, using the Health Professional Shortage Area classification (HPSA) instead of the number of dentists per population can provide a better assessment of the impact of dentist quantities on oral-related health behaviors in US counties. 
-
-
-
-# Session Information 
+# Session Information
 
 ```{r}
 
