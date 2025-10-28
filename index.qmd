@@ -1,0 +1,3 @@
+# Welcome {.unnumbered}
+
+This website shows a sample of my previous statistical analysis work using RStudio.
