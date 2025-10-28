@@ -17,6 +17,8 @@ format:
 
 ```{r}
 #| message: false
+#| warning: false
+
 
 knitr::opts_chunk$set(comment = NA)
 
@@ -31,7 +33,6 @@ library(patchwork)
 library(gt); library(gtExtras)
 library(car)
 library(mosaic)
-
 
 library(tidyverse)
 
@@ -106,12 +107,12 @@ Now we will check our variables.
 # Variable Cleaning and Renaming
 
 | Initial Name | New Name | Role | Description |
-|---------------:|---------------:|----------------|-------------------------|
+|-----------------:|-----------------:|------------------|-------------------|
 | `v060_rawvalue` | `Diabet_prev` | A1 outcome | Diabetes Prevalence: Percentage of adults aged 20 and above with diagnosed diabetes (age-adjusted) |
 | `v140_rawvalue` | `membershp_assocn` | A1 predictor | Social Associations: The count of membership associations for every 10,000 people in the population. |
 | `v127_rawvalue` | `adj_pre_mort` | A2 outcome | Premature Age-Adjusted Mortality: Number of deaths among residents under age 75 per 100,000 population (age-adjusted) |
 | `v168_rawvalue` | `Highschl_complet` | A2 predictor | High School Completion: Percentage of adults aged 25 and older who have completed high school or obtained an equivalent qualification. |
-| `v143_rawvalue` | `insuff_sleep` | A3 outcome | Insufficient Sleep: % of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018.|
+| `v143_rawvalue` | `insuff_sleep` | A3 outcome | Insufficient Sleep: % of adults who report fewer than 7 hours of sleep on average (age-adjusted) in 2018. |
 
 At this stage we have 441 counties and 9 variables.
 
@@ -709,10 +710,6 @@ tidy(m3, conf.int = TRUE, conf.level = 0.90) |>
 
 ### 90% CI for difference in group means via bootstrap
 
-```{r}
-set.seed(4312023)
-bootdif(Analysis_2$adj_pre_mort, Analysis_2$ Highschl_complet_grp, conf.level = 0.90, B.reps = 2000)
-```
 
 Our 90% bootstrap confidence interval for the difference in population means (High - low) in 'Highschl_complet_grp' is **(126.26, 168.00)** with a point estimate of **146.76**. The mean difference does not equal 0 and the range does not include 0. We can safely conclude that the level of secondary education completion is associated with premature age-adjusted mortality among our sample counties.
 
