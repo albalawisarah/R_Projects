@@ -12,6 +12,10 @@ book:
     - summary.qmd
     - project_01.qmd
     - project_02.qmd
+    - project_03.qmd
+    - project_04.qmd
+    - project_05.qmd
+    - project_06.qmd
     - references.qmd
 
 bibliography: references.bib

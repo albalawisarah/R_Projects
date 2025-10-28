@@ -1,0 +1,575 @@
+---
+title: "Moms & Babies Baseline Data"
+author: "Sarah Albalawi"
+date: last-modified
+format: 
+  html:
+    toc: true
+    number-sections: true
+    code-fold: show
+    code-tools: true
+    code-overflow: wrap
+    embed-resources: true
+    date-format: iso
+    theme: default  
+---
+  
+# R Setup {.unnumbered}
+  
+```{r}
+#| message: false
+#| warning: false
+
+knitr::opts_chunk$set(comment = NA) 
+
+library(janitor)
+library(dplyr)
+library(forcats)
+library(readr)
+library(gt)
+library(gtsummary)
+library(magrittr)
+library(Hmisc)
+library(knitr)
+library(easystats)
+library(tableone)
+library(Epi)
+library(Matching)
+library(arm)
+library(cobalt)
+library(broom)
+library(survival)
+library(ggplot2)
+library(RColorBrewer)
+library(tidyverse)
+
+theme_set(theme_bw()) 
+```
+
+
+
+## Loading the demographic Data {.unnumbered}
+
+```{r}
+
+demo_raw <- read_csv("CC_DEMO.csv", show_col_types = FALSE) |>
+  mutate(across(where(is.numeric), as_factor))|>
+  mutate(record_id = as.character(record_id),
+         race = as_factor(race)) |>
+  dplyr::select(-redcap_event_name)
+         
+
+dim(demo_raw)
+
+```
+
+
+
+## Loading the Baseline Data {.unnumbered}
+
+```{r}
+
+base_raw <- read_csv("CC_BASE.csv", show_col_types = FALSE) |>
+  mutate(record_id = as.character(record_id))|>
+  dplyr::select(record_id, redcap_event_name, healthy_weight, meal_frequency, fruits_veggies, fast_food, feeding_baby, confirm_pregnancy, disease_group)|>
+  filter(redcap_event_name == "eligibility_screen_arm_1")|>
+  dplyr::select(-redcap_event_name)
+         
+
+dim(base_raw)
+
+```
+
+
+
+## Join Baseline with Demographic Data
+
+```{r}
+
+mab_raw <- left_join(demo_raw, base_raw, by = "record_id") |>
+  mutate(across(where(is.numeric), as_factor))
+
+```
+
+
+  
+
+# Data Cleaning 
+
+```{r}
+
+mab_clean <- mab_raw |>
+  mutate(
+    race = fct_recode(race,
+                      "American Indian or Alaska Native" = "0",
+                      "Asian"  = "1",
+                      "Black, African American, or African" = "2",
+                      "Hispanic, Latino, or Spanish" = "3",
+                      "Middle Eastern or North African"  = "4",
+                      "Native Hawaiian or other Pacific Islander" = "5",
+                      "White" = "6",
+                      "Other" = "2,3",
+                      "Other" = "0,2",
+                      "Other" = "2,6",
+                      "Other" = "1,2,6",
+                      "Other" = "3,6",
+                      "Other" = "2,3,6"),
+    
+    marital_status = fct_recode(marital_status, 
+                              "Single"  = "1",
+                               "Married" = "2",
+                               "Live In" = "3" ,
+                              "Divorced"  = "4",
+                               "Widowed" = "5"),
+    
+    education = fct_recode(education,
+                            "Less than high school" = "0",
+                            "High school diploma or equivalent" = "1" ,
+                            "Associate degree" = "2" ,
+                            "Bachelors degree" = "3" ,
+                            "Graduate/ Professional degree" = "4"),
+    
+    income = fct_recode(income,
+                         "$29,000 or less" = "1",
+                         "$30,000-$49,999" = "2",
+                         "$50,000-$99,999" = "3"),
+    
+    household_size = fct_recode(household_size,
+                                "1 member" = "1",
+                                "2 members" = "2",
+                                "3 members" = "3",
+                                "4 members" = "4",
+                                "5 members" = "5",
+                                "6 members" = "6",
+                                "7 members" = "7",
+                                "8 or more" = "8+"),
+    
+    healthy_weight = fct_recode(healthy_weight,
+                                "Yes" = "1",
+                                "No" = "0"),
+    
+    meal_frequency = fct_recode(meal_frequency,
+                                "1-2 per week" = "0",
+                                "3-4 per week" = "1",
+                                "5-6 per week" = "2",
+                                "Everyday" = "3"),
+    
+    fruits_veggies = fct_recode(fruits_veggies,
+                                "0 per day" = "1",
+                                "1 per day" = "2",
+                                "2 per day" = "3",
+                                "3 per day" = "4",
+                                "4 per day" = "5",
+                                "5 per day" = "6"),
+    
+    fast_food = fct_recode(fast_food,
+                                "1-2 per week" = "0",
+                                "3-4 per week" = "1",
+                                "5-6 per week" = "2",
+                                "Everyday" = "3"),
+    
+    feeding_baby = fct_recode(feeding_baby,
+                                "Breast feed" = "1",
+                                "Formula feed" = "2",
+                                "Both methods" = "3"),
+    
+    confirm_pregnancy = fct_recode(confirm_pregnancy,
+                                "Yes" = "1",
+                                "No" = "0"),
+    
+    disease_group = fct_recode(disease_group,
+                                "1" = "0",
+                                "2" = "1",
+                                "3" = "2",
+                                "4" = "3",
+                                "5" = "4"))
+
+```
+
+
+```{r}
+ 
+mab_clean <- mab_clean |> 
+  mutate(
+    healthy_weight = fct_relevel(healthy_weight, "Yes"),
+    confirm_pregnancy = fct_relevel(confirm_pregnancy, "Yes")
+  )
+  
+```
+
+
+
+# Saving Cleaned Data 
+
+## Save `mab_clean` in RDS Format as `mab_data`
+
+```{r}
+
+write_rds(mab_clean,"mab_data.Rds")
+
+```
+
+
+## Save `mab_clean` in CSV Format as `mab_data`
+
+```{r}
+
+write.csv(mab_clean, file = "mab_data.csv")
+
+```
+
+
+
+
+# Data Summaries
+
+```{r}
+
+summary(mab_clean)
+
+```
+
+```{r}
+
+demo_summary <- mab_clean|>
+  dplyr::select(-record_id)
+
+demo_summary |> 
+  tbl_summary(label = list(
+    race ~ "Race",
+    marital_status ~ "Marital Status",
+    education ~ "Educational Level",
+    income ~ "Annual Household Income",
+    household_size ~ "Household Size",
+    healthy_weight ~ "Self-reported Healthy Weight",
+    meal_frequency ~ "Home Meals Frequency",
+    fruits_veggies ~ "Produce Consumption",
+    fast_food ~ "Fast Food Consumption",
+    feeding_baby ~ "Baby Feeding Method",
+    confirm_pregnancy ~ "Confirmed Pregnancy Status",
+    disease_group ~ "Chronic Disease"
+    )) |>
+  modify_header(label ~ "**Variable**")|>
+  modify_caption("**Table 1. Instacart Participants' Demographics**") |>
+  bold_labels()|>
+  as_gt() |>
+  gt::tab_source_note(gt::md("*129 Participants responded to the Baseline questionnaire*"))
+
+```
+
+
+
+# Visualize Demographics of population
+
+## Race
+
+```{r}
+
+ggplot(mab_clean, aes(x = race, fill = race)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))+
+labs(title = "Participants' Race",
+         subtitle = "Instacart Initiative Participants",
+         x = "Race Category",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Marital Status
+
+```{r}
+
+ggplot(mab_clean, aes(x = marital_status, fill = marital_status)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Marital Status",
+         subtitle = "Instacart Initiative Participants",
+         x = "Marital Status",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Education 
+
+```{r}
+
+ggplot(mab_clean, aes(x = education, fill = education)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))+
+labs(title = "Educational Level",
+         subtitle = "Instacart Initiative Participants",
+         x = "Educational Level",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Income
+
+```{r}
+
+ggplot(mab_clean, aes(x = income, fill = income)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Income Level",
+         subtitle = "Instacart Initiative Participants",
+         x = "Income Level",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Household Size
+
+```{r}
+
+ggplot(mab_clean, aes(x = household_size, fill = household_size)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Household Size",
+         subtitle = "Instacart Initiative Participants",
+         x = "Household Size",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Healthy Weight Status
+
+```{r}
+
+ggplot(mab_clean, aes(x = healthy_weight, fill = healthy_weight)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Healthy Weight Status",
+         subtitle = "Instacart Initiative Participants",
+         x = "Healthy Weight Status",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Home Meal Frequency
+
+```{r}
+
+ggplot(mab_clean, aes(x = meal_frequency, fill = meal_frequency)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Home Meal Frequency",
+         subtitle = "Instacart Initiative Participants",
+         x = "Home Meal Frequency",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Produce Consumption
+
+```{r}
+
+ggplot(mab_clean, aes(x = fruits_veggies, fill = fruits_veggies)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Produce Consumption",
+         subtitle = "Instacart Initiative Participants",
+         x = "Produce Consumption",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Fast Food Consumption
+
+```{r}
+
+ggplot(mab_clean, aes(x = fast_food, fill = fast_food)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Fast Food Consumption",
+         subtitle = "Instacart Initiative Participants",
+         x = "Fast Food Frequency",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Baby Feeding Method
+
+```{r}
+
+ggplot(mab_clean, aes(x = feeding_baby, fill = feeding_baby)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Baby Feeding Method",
+         subtitle = "Instacart Initiative Participants",
+         x = "Baby Feeding Method",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Pregnancy Status
+
+```{r}
+
+ggplot(mab_clean, aes(x = confirm_pregnancy, fill = confirm_pregnancy)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Pregnancy Status",
+         subtitle = "Instacart Initiative Participants",
+         x = "Confirmed Pregnancy",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+## Chronic Disease Status
+
+```{r}
+
+ggplot(mab_clean, aes(x = disease_group, fill = disease_group)) + 
+    geom_bar(aes(y = 
+        (after_stat(count)/sum(after_stat(count))))) +
+    geom_text(aes(y = 
+        (after_stat(count))/sum(after_stat(count)), 
+          label = scales::percent((after_stat(count)) / 
+                            sum(after_stat(count)))),
+              stat = "count", vjust = 1.5, 
+              color = "black", size = 4) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_brewer(palette = "GnBu")+
+    guides(fill = "none") +
+labs(title = "Chronic Disease Status",
+         subtitle = "Instacart Initiative Participants",
+         x = "Chronic Disease Status",
+         y = "Percentage",
+         caption = "Number of participants: 129")
+
+```
+
+
+
+# Session Information
+
+```{r}
+
+sessionInfo()
+
+```
+
+
