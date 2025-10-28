@@ -1,0 +1,1242 @@
+---
+title: "Cross-sectional analysis expolring the association between cumulative smoking years and body mass index among women in Texas"
+subtitle: "Using Behavioral Risk Factors Survey System (BRFSS)"
+author: "Sarah Albalawi & Walaa Alshaia"
+date: last-modified
+format: 
+  html:
+    toc: true
+    number-sections: true
+    embed-resources: true
+    date-format: iso
+    theme: paper
+    highlight: textmate
+---
+  
+  
+  
+ 
+# Setup and Data Ingest
+
+This study aims to explore and measure the association between cumulative smoking years and body mass index among women in Texas. The study sample was extracted from the Behavioral Risk Factor Surveillance System (BRFSS) which is a national telephone based survey that collects state-level data. The target population (aged 18 years and older) for cellular telephone samples in 2022 consists of people residing in a private residence or college housing who have a working cellular telephone. Our data set will only include adult women below the age of 65 whom were Texas residents in 2022. The outcome of interest is body mass index (`bmi`) and the key predictor is the number of years the subjects smoked cigarettes (`smoke_years`). Other factors will be observed, including race category, weight and average drinking per day. 
+
+
+
+
+## Initial Setup and Package Loads in R   
+  
+  
+```{r load_packages, message = FALSE, warning = FALSE}
+
+library(broom)
+library(gt)
+library(gtsummary)
+library(ggrepel)
+library(kableExtra)
+library(haven)
+library(car)
+library(GGally)
+library(Hmisc)
+library(janitor)
+library(knitr)
+library(mosaic)
+library(naniar)
+library(patchwork)
+library(sessioninfo)
+library(tidyverse) 
+
+
+opts_chunk$set(comment=NA)
+
+theme_set(theme_bw())
+options(dplyr.summarise.inform = FALSE)
+
+```
+
+
+
+## Loading the Raw Data into R
+
+We will load the BRFSS data set.  
+
+```{r q0}
+
+BRFSS <- read_xpt("C:/Users/albal/OneDrive/Desktop/MPHP 431/BRFSS/LLCP2022.XPT")
+
+```
+
+
+
+
+# Cleaning the Data
+
+## The Raw Data 
+
+Because the original data set is big, we will narrow down the raw data set to only include the variables of interest to our work. 
+
+```{r}
+
+BRFSS_study <- BRFSS|>
+  select(SEQNO, `_STATE`,`_SEX`,`_AGE65YR`, `_RFBMI5`, `_BMI5`, `_BMI5CAT`, WEIGHT2,`_YRSSMOK`, `_RFSMOK3`, SMOKDAY2, AVEDRNK3, `_RFDRHV8`, `_IMPRACE`)
+
+glimpse(BRFSS_study)
+
+```
+
+The BRFSS_study includes 16 variables and 445,132 subjects. For each subject we selected the following variables:
+
+- Demographic information including their state `_STATE`, sex `_SEX`, age `_AGE65YR`, and race / ethnicity `_IMPRACE`
+- Their reported weight `WEIGHT2` and the computed BMI level `_BMI5` and category `_BMI5CAT`
+- whether they are categorized as overweight `_RFBMI5`
+- The number of years they smoked cigarettes `_YRSSMOK` 
+- Their smoking frequency category `SMOKDAY2` and whether they are current smokers or not `_RFSMOK3`
+- Their average alcohol consumption per day `AVEDRNK3` and whether they are categorized as heavy drinkers or not `_RFDRHV8`
+
+
+
+
+## Variable Filter
+
+We will select our population of interest (**Adult women, below the age of 65, residing in Texas**) and filter other variables to include appropriate values for our analysis. We will also filter out missing values (such as un-answered and refused to answer categories): 
+
+```{r filter}
+
+TX <- BRFSS_study |>
+  filter( `_STATE` == 48, `_SEX`== 2, `_AGE65YR`== 1, WEIGHT2 < 0776, `_RFBMI5`< 3, `_RFSMOK3`< 3, SMOKDAY2 < 4, `_BMI5CAT` < 5 )|>
+  select( SEQNO, `_RFBMI5`, `_BMI5`, `_BMI5CAT`, WEIGHT2,`_YRSSMOK`, `_RFSMOK3`, SMOKDAY2, AVEDRNK3, `_RFDRHV8`, `_IMPRACE`)
+  
+```
+
+
+
+This is our initial data set 
+
+```{r}
+
+TX 
+
+```
+
+
+As we can see we need to adjust the decimal place of our outcome `_BMI5`. We will also rename our variables. 
+
+```{r}
+
+TX <- TX |>
+  mutate(bmi = `_BMI5`/100)|>
+  rename(race = `_IMPRACE`,
+         overweight = `_RFBMI5`,
+         bmi_category = `_BMI5CAT`,
+         weight = WEIGHT2,
+         smoke_years = `_YRSSMOK`, 
+         smoke_currently = `_RFSMOK3`, 
+         smoke_frequency = SMOKDAY2,
+         drink_daily = AVEDRNK3,
+         drink_heavy = `_RFDRHV8`)
+
+```
+
+
+
+## Which variables should be included in the tidy data set?
+
+Our regression model will only include 5 predictors: `smoke_years`, `race`, `weight`, and `drink_daily` for our outcome of interest `bmi`. 
+
+
+
+## Checking our outcome and key predictor
+
+```{r}
+
+df_stats(~ bmi + smoke_years, data = TX)
+
+```
+
+There are no missing observations in the outcome variables, but there are a few missing values in the main predictor variable. The `bmi` range extends from 16 to 65 with an average of 30, which is considered higher than the healthy level. Cumulative smoking years extends from 1 year to 56 years with an average of 19 years.  
+
+
+
+## Checking the Quantitative Predictors
+
+```{r}
+
+df_stats(~ weight + drink_daily, data = TX)
+
+```
+
+There are no missing values in the weight values. The height range extends from 30.5 to 60.6 inches with low variation. This implies that the majority of our study sample is shorter than the average american woman. The weight has a high range extending from 80 pounds to 400 pounds, which indicates that a large proportion of our study sample is on the overweight side.   
+
+
+
+
+## Checking the Categorical Variables
+
+One of the predictors `race` is a non-ordinal, categorical variable which requires some modifications before analysis. 
+
+
+### Race
+
+First we will mutate the variable `race` into a factor then rename the variable categories:
+
+```{r}
+
+TX$race <- as.factor(as.numeric(TX$race))
+
+```
+
+Now we will re-level the categories. 
+
+```{r}
+
+TX$race <- 
+    fct_relevel(TX$race,
+                "1", "2", "3", "4", "5", "6")
+
+```
+
+Then, we will rename each category to clarify its meaning. 
+
+```{r}
+
+TX_b <- TX |>
+  mutate(
+    race = fct_recode(race,
+      "White" = "1",
+      "Black" = "2",
+      "Asian" = "3",
+      "American Indian" = "4",
+      "Hispanic" = "5",
+      "Other" = "6"))
+
+tabyl(TX_b$race)
+
+```
+
+As we can see the Asian, American Indian, and Others categories have relatively low frequencies. So we will combine them under the Others category. 
+
+We will order our categories according their frequencies from the highest to lowest.
+
+```{r}
+
+TX_b <- TX_b |>
+  mutate(race = fct_infreq(race))
+
+
+```
+
+
+Then we will collapse the categories with the lowest frequencies under a category called **Others** and rename our variable from `race` to `race_cat`. 
+
+```{r}
+
+TX_b <- TX_b |>
+  mutate(race_cat = fct_lump_n(TX_b$race, n = 4))
+
+tabyl(TX_b$race_cat)
+
+```
+The majority of the subjects are White, followed by Hispanic. The Black and Other races are remarkably lower. It is true that the unbalances distribution may impact external validity of our findings. However, it may also reflect the distribution of the target population being studied (women in Texas). 
+It is important to note that the **Other** category includes Asians, Native Americans, and other races, all of which are non-Hispanic. 
+
+
+
+
+
+
+### What about the subjects?
+
+Each subject should have a sequential number `SEQNO`. 
+
+```{r}
+
+nrow(TX_b)
+
+```
+
+```{r}
+
+n_distinct(TX_b |> select(SEQNO))
+
+```
+
+The number of rows matches the number of `SEQNO` in our data set. We can rest assured that each subject has a sequential number. 
+
+
+
+## Dealing with Missingness
+
+The outcome does not have any missing observations. Neither do the predictors except for the key predictor `smoke_years` (86 NA) and `drink_daily` (563 NA). 
+
+```{r}
+
+miss_var_summary(TX_b)
+
+```
+
+
+None of the subjects are missing more than 2 variables as demonstrated below.
+
+```{r}
+
+miss_case_summary(TX_b)
+
+```
+
+
+For this analysis we will assume that the observations are **missing completely at random**. In this case, using complete cases method to deal with the missing data is appropriate. 
+
+
+This is the complete data set for the analysis. 
+
+```{r}
+
+TX_CC <- TX_b |>
+  select(SEQNO, race_cat, overweight, bmi, bmi_category, weight, smoke_years, smoke_currently, smoke_frequency, drink_daily, drink_heavy) |>
+  drop_na()
+
+TX_CC
+
+```
+
+
+We are left with a total of 565 subjects with complete observations of all variables. 
+
+
+
+
+
+
+# Codebook and Data Description
+
+## The Codebook 
+
+
+
+Variable | Initial Name | Type | Description/Levels
+-----: | -------: | -------: | ---------- 
+`SEQNO` | SEQNO | Character | Sequential number of study subjects 
+`race_cat` | _IMPRACE | 4 level Cat. | Race / ethnicity of respondent
+`overweight` | _RFBMI5 | Binary | Adults women who have a body mass index greater than 25.00 (Overweight): yes or no
+`bmi` | _BMI5 | Quantitative | **Outcome**: Computed body mass index
+`bmi_category` | _BMI5CAT | 3 level Cat. |  Computed body mass index categories: Underweight, Normal Weight, Overweight, Obese
+`weight` | WEIGHT2 | Quantitative | Reported Weight in Pounds
+`smoke_years` | _YRSSMOK | Quantitative | **Key Predictor**: Number of years respondent smoked cigarettes
+`smoke_currently` | _RFSMOK3 | Binary | Adults who are current smokers: yes or no
+`smoke_frequency` | SMOKDAY2 | 3 level Cat. | Reported smoking frequency: every day, some days, not at all
+`drink_daily` | AVEDRNK3 | Quantitative | Average alcoholic drinks per day in past 30 days
+`drink_heavy` | _RFDRHV8 | Binary | Heavy drinkers (adult women having more than 7 drinks per week): yes or no
+
+
+This table includes all variables used for both study 1 and study 2 analysis. 
+
+For this analysis (study 2) we will only use five predictors: `smoke_years`, `weight`, `race_cat`, and `drink_daily`.
+
+
+
+
+
+Now we will create a subset from the complete cases set `Texas_cc` with the 5 variables of interest for study 2 analysis. 
+
+```{r}
+
+TX_analytic <- TX_CC |>
+  select(SEQNO, race_cat, bmi, smoke_years, weight, drink_daily) 
+
+```
+
+
+
+
+## Analytic Tibble
+
+Our analytic tibble has 6 variables and 550 observations with complete cases.
+
+```{r}
+
+TX_analytic
+
+```
+
+
+We also need to confirm the presence of our tibble through this code because we are using `df_print: paged` in our YAML.
+
+```{r}
+
+is_tibble(TX_analytic)
+
+```
+
+
+
+## Numerical Data Description
+
+```{r}
+
+describe(TX_analytic |> select(-SEQNO)) |> html()
+
+```
+
+
+
+
+
+# My Research Question 
+
+The impact of smoking cigarettes on health outcomes has been extensively researched throughout recent decades. However, the majority of these studies have been focused on men as the main consumers of cigarettes. Predatory tobacco marketing also targeted women by advertising cigarettes as an effective method for weight reduction. The latest national statistics also revealed a high prevalence of smoking among women from southern states. In this analysis, we aim to explore the impact of the number of years women smoked cigarettes on their body mass index. The body mass index is an important health outcome that highly relates to chronic diseases' incidence. We will also observe the impact of other biological factors including weight and race / ethnicity, and average alcohol consumption per day as a behavioral factor.
+
+To what extent can the number of years women smoked cigarettes (`smoke_years`) predict their `bmi` level, and can `weight`, race / ethnicity (`race_cat`), and daily alcohol consumption (`drink_daily`) improve the quality of our prediction? 
+
+
+
+# Partitioning the Data
+
+In the following steps, we will divide our analytic data set (`TX_analytic`) into two subsets called the training data (`TX_training`) and the test data (`TX_test`). The subjects will be assigned in either group randomly with 70% in the training set and 30% in the test set. We will set a seed (777) to allow future replication of the results. 
+
+
+```{r}
+
+set.seed(777) 
+
+TX_training <- TX_analytic |> slice_sample(prop = .70)
+TX_test <- anti_join(TX_analytic, TX_training, by = "SEQNO")
+
+dim(TX_analytic) 
+
+```
+
+
+```{r}
+
+dim(TX_training) 
+
+```
+
+
+```{r}
+
+dim(TX_test) 
+
+```
+
+The training set has 395 subjects and the test set has 170. The sum of the two sets equals 565 subjects which matches the original number of our analytic data set. 
+
+
+
+# Transforming the Outcome
+
+## Visualizing the Outcome Distribution
+
+
+We will visualize the outcome distribution using three plots: the histogram, normal Q-Q plot, and box plot with violin. 
+
+```{r}
+
+p1 <- ggplot(TX_training, aes(x = (bmi))) +
+  geom_histogram(bins = 30, 
+                 fill = "slateblue", col = "white")
+
+p2 <- ggplot(TX_training, aes(sample = (bmi))) + 
+  geom_qq(col = "slateblue") + geom_qq_line(col = "violetred") +
+  labs(y = "bmi", x = "Normal (0,1) quantiles") + 
+  theme(aspect.ratio = 1)
+
+p3 <- ggplot(TX_training, aes(x = "", y = (bmi))) +
+  geom_violin(fill = "slateblue", alpha = 0.1) + 
+  geom_boxplot(fill = "slateblue", width = 0.3, notch = TRUE,
+               outlier.color = "slateblue", outlier.size = 3) +
+  labs(x = "") + coord_flip()
+
+p1 + p2 - p3 +
+  plot_layout(ncol = 1, height = c(3, 2)) + 
+  plot_annotation(title = "Body Mass Index (bmi)",
+         subtitle = str_glue("Model Development Sample: ", nrow(TX_training), 
+                           " Adult Women"))
+
+```
+
+The outcome is clearly right skewed due to multiple extreme values (outliers). We will attempt to transform the outcome to improve the distribution. 
+
+
+
+
+
+## `Box-Cox` function to assess the need for transformation of our outcome 
+
+We will use the `Box-Cox` function to see the suggested transformation to improve the skew of our outcome. 
+
+```{r}
+
+model_temp <- lm(bmi ~ smoke_years + race_cat + weight +  drink_daily,
+                 data = TX_training)
+
+boxCox(model_temp)
+
+```
+
+This plot provides a visual estimate of the suggested transformation of our outcome. 
+
+The code below can provide a numeric estimate:
+
+```{r}
+
+powerTransform(model_temp)
+
+```
+
+
+The suggested transformation power is about 0.6 which suggests that the square root transformation could be the best approach in this case. 
+
+
+
+This is the scatter plot of the outcome `bmi` without transformation:
+
+```{r}
+
+p1 <- ggplot(TX_training, aes(x = smoke_years , y = bmi)) +
+  geom_point() +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) + 
+  geom_smooth(method = "lm", col = "red", formula = y ~ x, se = FALSE) +
+  labs(title = "bmi vs. years smoking")
+
+p1
+
+```
+
+
+Now will compare the scatter plots after transforming the outcome `bmi` alone and transforming both key predictor `smoke_years` and outcome `bmi`. 
+
+```{r}
+
+p2 <- ggplot(TX_training, aes(x = smoke_years, y = sqrt(bmi))) +
+  geom_point() +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) + 
+  geom_smooth(method = "lm", col = "red", formula = y ~ x, se = FALSE) + 
+  labs(title = "sqrt(bmi) vs. (years smoking)")
+
+p3 <- ggplot(TX_training, aes(x = sqrt(smoke_years), y = sqrt(bmi))) +
+  geom_point() +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) + 
+  geom_smooth(method = "lm", col = "red", formula = y ~ x, se = FALSE) + 
+  labs(title = "sqrt(bmi) vs. sqrt(years smoking)")
+
+ p2 + p3
+
+```
+
+Neither did applying the square root of the outcome alone nor the predictor and outcome together produce remarkable improvements, so **we will continue using the data without transformation**.  
+
+
+
+
+
+## Numeric Summary of the outcome 
+
+We will observe the numeric summary of the outcome `bmi` in our training set:
+
+
+```{r}
+
+favstats(~ bmi, data = TX_training)
+
+```
+
+
+The `bmi` level of the training sample ranges from 16.0 to 65.0. The average is 29.4 with a standard deviation of 7.7. 
+
+
+
+## Numeric Summary of the Predictors 
+
+We will also observe the numeric summary of our predictors in the training sample: 
+
+
+```{r}
+
+Hmisc::describe(TX_training |> 
+                    select(race_cat, weight, smoke_years, drink_daily))
+
+```
+
+
+- In terms of `race_cat`, the sample is predominantly White, followed by Hispanic, Black, and Other (non-Hispanic)
+- The `weight` of the subjects extends from 91 pounds to 380 pounds with an average of 174.5 pounds 
+- The number of years the subjects smoked cigarettes (`smoke_years`) ranges from 1 year to 51 years with an average of 20.1 years
+- The average alcoholic drinks per day (`drinks_daily`) ranges from 1 drink per day to 99 drinks per day with an average of 4.9 drinks per day
+The last variable includes unrealistically high values which may have occurred due to subjects misunderstanding the questionnaire or an error when recording the answers. 
+
+
+
+## Scatterplot Matrix 
+
+
+```{r}
+
+temp <- TX_training |> 
+  select(race_cat, weight, smoke_years, drink_daily, bmi) 
+
+ggpairs(temp, title = "Scatterplot Matrix",
+        lower = list(combo = wrap("facethist", bins = 28)))
+
+```
+
+
+As expected, the variable with the highest correlation (0.944) with the outcome is `weight`. The second highest is the key predictor `smoke_years` with a correlation of (0.044) followed by `drink_daily` (0.043). The two predictors with the highest correlation with each other are `weight` and `smoke_years` (0.063). The key predictor `smoke_years` has a slightly higher correlation with `weight` (0.063) than `bmi` (0.044). The predictor `drink_daily` has the least correlation with the outcome as well as other predictors.
+
+
+
+
+Now we will observe our categorical predictor `race_cat` and the outcome of interest `bmi`:
+
+```{r}
+
+favstats(bmi ~ race_cat, data = TX_training)
+
+```
+
+The Hispanic group has the highest median `bmi`, followed by the Black, Other, and White respectively. In this scenario, we preferred reporting the median instead of the mean due to the observed right skew in the outcome distribution. The Black group has the highest variation, which may be due to the low count of the two groups. The Hispanic and White group have similar variation (7.9 and 7.2 respectively). The Other group has the lowest count and lowest variation. 
+
+
+
+## Collinearity Checking
+
+As mentioned previously under the scatter plot matrix, the highest correlation (0.063) among predictors was found between `weight` and `smoke_years`.  The correlation is not strong, therefore collinearity should not be an issue. 
+
+
+
+
+# The Big Model 
+
+Now we will build the big model (AKA the kitchen sink model) which incorporates all the predictors. Our goal is to assess the effectiveness of the model in the training sample. 
+
+
+## Fitting the kitchen sink model 
+
+The kitchen sink model predicts `bmi` using the key predictor `smoke_years` and four other predictors: `weight`, `race_cat`, and `drink_daily`. 
+
+
+```{r}
+
+model_big <- lm(bmi ~ smoke_years + race_cat + weight + drink_daily, 
+                data = TX_training)
+
+```
+
+```{r}
+
+summary(model_big)
+
+```
+
+This is a detailed summary of the kitchen sink (**big**) model. 
+
+
+## Effect Sizes: Coefficient Estimates
+
+We will tidy the coefficient estimates and calculate a 90% confidence interval to observe meaningful size and magnitude differences.  
+
+
+```{r}
+
+tidy(model_big, conf.int = TRUE, conf.level = 0.90) |> 
+  select(term, estimate, std.error, conf.low, conf.high, p.value) |> 
+  kable(dig = 4)
+
+```
+
+The coefficients with highest absolute values are **Hispanic race category** (1.80), and **Black race category** (-0.68). However, only `Hispanic race`, `weight`, and `smoke years` have detectable significance in the big model.
+
+
+
+## Describing the Equation
+
+The **big model** implies that the **key predictor** `smoke_years`:
+
+For every year of smoking, the body mass index (`bmi`) is expected to decreased by 0.0061 points. (90% Confidence Interval: -0.0220	0.0099). Suppose we have two adult women, from Texas, from the same race, have the same weight, and alcohol daily intake. If one of them smoked cigarettes for a year longer than the other, her `bmi` level is predicted to be 0.0061 points lower than the lady that smoked a year less than she did. In this case, the key predictor does not yield a remarkable impact on the `bmi` level. 
+
+**Race** on the other hand has a higher impact. The Hispanic race, in particular, are predicted to have (1.80) (90% CI: 1.30, 2.30) increase in their `bmi` level compared to other women with the same features from White, Black and Other races. 
+
+**weight** increases `bmi` level by (0.15) with a 90% confidence interval (0.148,	0.156). 
+
+**Average alcohol intake per day** increases the `bmi` level by (0.019), with a 90% confidence interval (0.0029, 0.0341). Although its impact is lower than the other predictors, it remains higher than the key predictor.   
+
+
+
+
+
+# The Smaller Model
+
+Now we will build the small model which includes a fewer subset of the predictors listed in the big model. In order to decide which predictors should be removed, we will use the backwards step wise elimination approach. 
+
+
+## Backwards Stepwise Elemination
+
+Unfortunately this method was not suitable for our model because it removed the key predictor `smoke_years`. We will build our candidate models using a different method.  
+
+
+
+## Another method to develop our small model:
+
+Here, we will build three models, the first model is the original big model (modelA), the second is the first candidate to be the small model (modelB), and the third is the second candidate to be the small model (modelC). 
+
+```{r}
+
+modelA <- lm(bmi ~ smoke_years + race_cat + weight + drink_daily, 
+             data = TX_training)
+modelB <- lm(bmi ~ smoke_years + race_cat + weight, 
+             data = TX_training)
+modelC <- lm(bmi ~ smoke_years + race_cat, 
+             data = TX_training)
+modelD <- lm(bmi ~ smoke_years, 
+             data = TX_training)
+
+```
+
+
+```{r}
+
+anova(modelC, modelB, modelA, modelD)
+
+```
+
+
+
+```{r}
+
+repA <- glance(modelA) |> mutate(name = "modelA")
+repB <- glance(modelB) |> mutate(name = "modelB")
+repC <- glance(modelC) |> mutate(name = "modelC")
+repD <- glance(modelD) |> mutate(name = "modelD")
+
+fit_report <- bind_rows(repA, repB, repC, repD)
+
+fit_report |> 
+    select(name, r2 = r.squared, adjr2 = adj.r.squared, sigma, 
+           AIC, BIC, nobs, df, df.res = df.residual) |>
+    kbl(digits = c(0,4,4,3,0,0,0,0,0)) |> kable_minimal()
+
+```
+
+
+Models A and B are comparable in terms of the r squared, adjusted r squared, sigma, and AIC values. Model C and D's performance is remarkably lower so we will exclude them. **Model B** will be selected as the **small model**. 
+
+
+
+
+
+## Fitting the “small” model
+
+Now we will fit the selected small model in the training sample. 
+
+
+```{r}
+
+model_small <- lm(bmi ~ smoke_years + race_cat + weight,
+data = TX_training)
+
+summary(model_small)
+
+```
+
+
+
+## Effect Sizes: Coefficient Estimates
+
+We will produce 90% confidence intervals for our coefficient estimates to evaluate the size and magnitude of the predictors' impact on the outcome.
+
+
+```{r}
+
+tidy(model_small, conf.int = TRUE, conf.level = 0.90) |> 
+  select(term, estimate, std.error, conf.low, conf.high, p.value) |> 
+  kable(dig = 4)
+
+```
+
+
+## Interpreting the Small Model Regression Equation
+
+The **key predictor** `smoke_years`:
+
+Similar to the big model, the key predictor in the **small model** predicts that for every year of smoking, the body mass index (`bmi`) is expected to decrease by 0.0058 points (90% Confidence Interval: -0.0218, 0.0102). Suppose we have two adult women, from Texas, from the same race, have the same weight, and alcohol daily intake. If one of them smoked cigarettes for a year longer than the other, her `bmi` level is predicted to be 0.0058 points lower than the lady that smoked a year less than she did. In this case, the key predictor does not yield a remarkable impact on the `bmi` level. 
+
+Other Predictors:
+
+In the small model, **Race** also yielded the highest absolute coefficient value, particularly the Hispanic race whom are predicted to have (1.82) with a 90% confidence interval (1.318, 2.320) increase in their `bmi` level compared to other women with the same features from White, Black and Other non-Hispanic races. 
+
+**weight** increases `bmi` level by (0.15) with a 90% confidence interval (0.148,	0.156). 
+
+
+
+
+
+# In-Sample Comparison
+
+In this step, we will compare the big model's and the small model's performance in the training sample by assessing the R squared values and adjusted R squared values.
+
+
+## Quality of Fit
+
+To accomplish this task, we will build two tibbles, one for each model. Each tibble will summarize the key results. Afterwards, we will combine the results in a single table `training_comp` and assess the models' performance. 
+
+
+```{r}
+
+temp_a <- glance(model_big) |> 
+  select(-logLik, -deviance) |>
+  round(digits = 3) |>
+  mutate(modelname = "big")
+
+temp_b <- glance(model_small) |>
+  select(-logLik, -deviance) |>
+  round(digits = 3) |>
+  mutate(modelname = "small")
+
+training_comp <- bind_rows(temp_a, temp_b) |>
+  select(modelname, nobs, df, AIC, BIC, everything())
+
+```
+
+
+
+```{r}
+
+training_comp
+
+```
+
+The big model (which includes all predictors) has lower R squared and adjusted R squared values. It also has higher sigma, AIC and BIC values. The small model (includes all predictors except `dink_daily`) has a R squared and adjusted R squared values. The sigma, AIC and BIC values are relatively higher. In the training sample, the **small model** outperforms the big model in all of the summaries. 
+
+
+
+
+## Assessing Assumptions
+
+Now we will check the assumption of linear regression: linearity, normality, homoscedasticity, and influential values. 
+
+
+
+### Residual Plots for the Big Model
+
+
+First we will augment our results:
+
+```{r}
+
+aug_big <- augment(model_big, data = TX_training) |>
+  mutate(bmi = bmi) 
+
+
+```
+
+
+Next we will generate the residual plots: 
+
+```{r, fig.height = 8}
+
+p1 <- ggplot(aug_big, aes(x = .fitted, y = .resid)) +
+  geom_point() + 
+  geom_point(data = aug_big |> 
+               slice_max(abs(.resid), n = 3),
+             col = "red", size = 2) +
+  geom_text_repel(data = aug_big |> 
+               slice_max(abs(.resid), n = 3),
+               aes(label = SEQNO), col = "red") +
+  geom_abline(intercept = 0, slope = 0, lty = "dashed") +
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  labs(title = "Residuals vs. Fitted",
+       x = "Fitted Value of bmi", y = "Residual") 
+
+p2 <- ggplot(aug_big, aes(sample = .std.resid)) +
+  geom_qq() + 
+  geom_qq_line(col = "red") +
+  labs(title = "Normal Q-Q plot",
+       y = "Standardized Residual", 
+       x = "Standard Normal Quantiles") 
+
+p3 <- ggplot(aug_big, aes(x = .fitted, y = sqrt(abs(.std.resid)))) +
+  geom_point() + 
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  labs(title = "Scale-Location Plot",
+       x = "Fitted Value of bmi", 
+       y = "|Std. Residual|^(1/2)") 
+
+p4 <- ggplot(aug_big, aes(x = .hat, y = .std.resid)) +
+  geom_point() + 
+  geom_point(data = aug_big |> filter(.cooksd >= 0.5),
+             col = "red", size = 2) +
+  geom_text_repel(data = aug_big |> filter(.cooksd >= 0.5),
+               aes(label = SEQNO), col = "red") +
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  geom_vline(aes(xintercept = 3*mean(.hat)), lty = "dashed") +
+  labs(title = "Residuals vs. Leverage",
+       x = "Leverage", y = "Standardized Residual") 
+
+(p1 + p2) / (p3 + p4) +
+  plot_annotation(title = "Assessing Residuals for the big model")
+
+```
+
+
+There are no serious issues except for the spread of the residuals in the residuals vs. fitted values, which indicate a problem with homoscedasticity. 
+
+
+
+
+### Residual Plots for the Small Model
+
+
+First we will augment the small model:
+
+```{r}
+
+aug_small <- augment(model_small, data = TX_training) |>
+  mutate(bmi = bmi) 
+
+
+```
+
+
+Next we will generate the residual plots: 
+
+```{r, fig.height = 8}
+
+p1 <- ggplot(aug_small, aes(x = .fitted, y = .resid)) +
+  geom_point() + 
+  geom_point(data = aug_small |> 
+               slice_max(abs(.resid), n = 3),
+             col = "red", size = 2) +
+  geom_text_repel(data = aug_small |> 
+               slice_max(abs(.resid), n = 3),
+               aes(label = SEQNO), col = "red") +
+  geom_abline(intercept = 0, slope = 0, lty = "dashed") +
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  labs(title = "Residuals vs. Fitted",
+       x = "Fitted Value of bmi", y = "Residual") 
+
+p2 <- ggplot(aug_small, aes(sample = .std.resid)) +
+  geom_qq() + 
+  geom_qq_line(col = "red") +
+  labs(title = "Normal Q-Q plot",
+       y = "Standardized Residual", 
+       x = "Standard Normal Quantiles") 
+
+p3 <- ggplot(aug_small, aes(x = .fitted, y = sqrt(abs(.std.resid)))) +
+  geom_point() + 
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  labs(title = "Scale-Location Plot",
+       x = "Fitted Value of bmi", 
+       y = "|Std. Residual|^(1/2)") 
+
+p4 <- ggplot(aug_small, aes(x = .hat, y = .std.resid)) +
+  geom_point() + 
+  geom_point(data = aug_small |> filter(.cooksd >= 0.5),
+             col = "red", size = 2) +
+  geom_text_repel(data = aug_small |> filter(.cooksd >= 0.5),
+               aes(label = SEQNO), col = "red") +
+  geom_smooth(method = "loess", formula = y ~ x, se = F) +
+  geom_vline(aes(xintercept = 3*mean(.hat)), lty = "dashed") +
+  labs(title = "Residuals vs. Leverage",
+       x = "Leverage", y = "Standardized Residual") 
+
+(p1 + p2) / (p3 + p4) +
+  plot_annotation(title = "Assessing Residuals for the big model")
+
+```
+
+
+Similar to the big model, the **small model** also does not face any issues except for the assumption of homoscedasticity. 
+
+
+
+### Does collinearity have a meaningful impact?
+
+
+```{r}
+
+car::vif(model_big)
+
+```
+
+As we can see, the highest generalized variance inflation factor value in the big model is 1.058. This does not indicate a serious problem with collinearity. These conclusions can be applied to the small model as well. 
+
+
+
+## Comparing the Models
+
+Neither model has serious issues with regression assumptions, except for the issue of homoscedasticity. The **small model**, however, performed better than the big model in the training sample. It will be the main candidate for the time being. 
+
+
+
+
+
+
+
+
+# Model Validation
+
+We will test the two regression models' performances using the test sample. Based on that, we can determine which model should be selected as the final model. 
+
+
+## Calculating Prediction Errors
+
+### Big Model: Calculating Fits/Residuals
+
+In this step, we will calculate the fitted and residual values using the augment function. We do not need to back-transform any variables because we used them without applying transformations. 
+
+
+```{r}
+
+aug_big <- augment(model_big, newdata = TX_test) |> 
+  mutate(mod_name = "big",
+         bmi_fit = .fitted,
+         bmi_res = bmi - bmi_fit) |>
+  select(SEQNO, mod_name, bmi, bmi_fit, bmi_res, everything())
+
+head(aug_big,3)
+
+```
+
+
+
+### Small Model: Calculating Fits/Residuals
+
+We will apply the same steps for the small model. 
+
+
+```{r}
+
+aug_small <- augment(model_small, newdata = TX_test) |> 
+  mutate(mod_name = "small",
+         bmi_fit = .fitted,
+         bmi_res = bmi - bmi_fit) |>
+  select(SEQNO, mod_name, bmi, bmi_fit, bmi_res, everything())
+
+head(aug_small,3)
+
+```
+
+
+
+### Combining the Results
+
+Now we sill combine the results of the two models.
+
+
+```{r}
+
+test_comp <- union(aug_big, aug_small) |>
+  arrange(SEQNO, mod_name)
+
+test_comp |> head()
+
+```
+
+
+The resulting tibble `test_comp` will be used in the following steps to summarize, visualize, and identify the largest errors in both models. 
+
+
+## Visualizing the Predictions
+
+
+```{r}
+
+ggplot(test_comp, aes(x = bmi_fit, y = bmi)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, lty = "dashed") + 
+  geom_smooth(method = "loess", col = "blue", se = FALSE, formula = y ~ x) +
+  facet_wrap( ~ mod_name, labeller = "label_both") +
+  labs(x = "Predicted bmi",
+       y = "Observed bmi",
+       title = "Observed vs. Predicted bmi",
+       subtitle = "Comparing Big to Small Model in Test Sample",
+       caption = "Dashed line is where Observed = Predicted")
+
+```
+
+
+The big and small models have the same patter of prediction errors. 
+
+
+
+## Summarizing the Errors
+
+This summary includes the mean absolute prediction error (MAPE), the root mean squared prediction error (RMSPE), and the maximum absolute error calculated from predictions made by each model. 
+
+
+```{r}
+
+test_comp |>
+  group_by(mod_name) |>
+  summarise(n = n(),
+            MAPE = mean(abs(bmi_res)), 
+            RMSPE = sqrt(mean(bmi_res^2)),
+            max_error = max(abs(bmi_res)))
+
+```
+
+
+The **small model** has a slightly better MAPE, RMSPE and maximum error values than the big model. The MAPE value suggests that using these models to predict women's `bmi` could overestimate it by approximately 2.2 points. This level of error in `bmi` measurement is not acceptable because this level of difference can easily change their BMI category. 
+
+
+
+### Identify the largest errors
+
+We will identify the subject with the worst fit in both models by calculating the maximum residual error in each model.  
+
+
+```{r}
+
+temp1 <- aug_big |>
+  filter(abs(bmi_res) == max(abs(bmi_res)))
+
+temp2 <- aug_small |>
+  filter(abs(bmi_res) == max(abs(bmi_res)))
+
+bind_rows(temp1, temp2)
+
+```
+
+
+From the presented table, we can see that the same subject (`2022009499`) had the worst fit in both models.
+
+
+
+
+
+### Validated R-square values
+
+Here is the squared correlation between our predicted `bmi` and our actual `bmi` in the test sample, using the big model.
+
+```{r}
+
+cor(aug_big$bmi, aug_big$bmi_fit)^2
+
+```
+
+
+This is the R-square we obtained within the test sample for the small model.
+
+```{r}
+
+cor(aug_small$bmi, aug_small$bmi_fit)^2
+
+```
+
+
+The squared correlation of the two models are about the same, with the small model having a slightly higher value. Though, both models have remarkably high validated R squared values. 
+
+
+
+## Removing the largest error
+
+This is the summary before removing the largest error:
+
+```{r}
+
+test_comp |>
+  group_by(mod_name) |>
+  summarize(n = n(), MAPE = mean(abs(bmi_res)), 
+            RMSPE = sqrt(mean(bmi_res^2)),
+            max_error = max(abs(bmi_res)), 
+            median_APE = median(abs(bmi_res)),
+            valid_R2 = cor(bmi, bmi_fit)^2) |>
+  kbl(digits = c(0, 0, 4, 3, 2, 3, 3)) |> kable_minimal(font_size = 22)
+
+```
+
+
+
+```{r}
+
+test_comp |> filter(SEQNO != "2022009499") |>
+  group_by(mod_name) |>
+  summarize(n = n(), MAPE = mean(abs(bmi_res)), 
+            RMSPE = sqrt(mean(bmi_res^2)),
+            max_error = max(abs(bmi_res)), 
+            median_APE = median(abs(bmi_res)),
+            valid_R2 = cor(bmi, bmi_fit)^2) |>
+  kbl(digits = c(0, 0, 4, 3, 2, 3, 3)) |> kable_minimal(font_size = 22)
+
+```
+
+Removing the subject with the highest error increased the R squared and adjusted R squared value for both models, but the difference between them remains the same. The maximum error was significantly reduced after removing the subject. The big model has lower sigma and median APE values. The **small model** remains slightly better in terms of the MAPE, RMSPE, and valid R squared values.  
+
+
+
+## Comparing the Models
+
+The small model dominated the big model in the training sample. In the test sample, The small model was also slightly better in the majority of the summaries. Therefore, the **small model** will be selected as our final model. Though, the performance of the two models are fairly similar 
+
+
+
+
+
+# Discussion
+
+## Chosen Model
+
+In the training sample, the small model yielded better values in terms of R squared, adjusted R squared, AIC, BIC and sigma. In the test sample, the small model exhibited better performance in terms of MAPE, RMSPE, maximum error and Valid R squared, while the big model had better median APE value. After removing the subject with largest error, the small model's performance remained slightly better. Based on these results, we will choose the **small model**. It has a lower number of predictors and better performance in both the training sample and testing sample. 
+
+
+
+## Answering My Question
+
+```{r}
+
+tidy(model_small, conf.int = TRUE, conf.level = 0.90) |> 
+  select(term, estimate, std.error, conf.low, conf.high, p.value) |> 
+  kable(dig = 4)
+
+```
+
+**The linear regression model that predicted `bmi` for women in Texas:**
+
+`bmi` = 2.59 + `smoke_years` (-0.0058) + `race_cat`(Hispanic(1.82)/ Black(-0.05)/ Other(-0.22))  + `weight` (0.15)
+
+In our study sample, the key predictor `smoke_year`, and other predictors, race category (Black and Other) were associated with **decreased** `bmi` levels. On the other hand, the race categories (White and Hispanic) and weight were associated with **increased** `bmi` levels. The only predictors that exhibited detectable impact on the outcome were weight and race category (White and Hispanic). 
+
+
+**Quality of Fit:**
+
+The validated R squared is **0.863**, which indicates that our model was able to predict **86.3%** of variation in our outcome. The previous adjusted r squared value generated from the training sample was 0.90, which indicates that the model's predictability was slightly overestimated. The remarkable high predictability of this model is likely due to the incorporation of the most important factor in calculating `bmi` levels (*weight*). The key predictor had a weak correlation with the outcome (-0.0058), which implies that it is not the best predictor. The *Hispanic race* category was highly correlated (1.59) with increased `bmi`.
+
+
+**Regression Assumptions:**
+
+There were no serious violations of linear regression assumptions, except for homoscedasticity, which can be observed in the residual vs. fitted plot. 
+
+
+
+## Next Steps
+
+The only predictors with missing observations was the key predictor `smoke_years` and another predictor that was added to assess interaction `drink_daily`. In this analysis, I assumed that those observations were missing completely at random. The next step would be to use imputation (single imputation followed by multiple imputation) to assess potential improvement in big model, which incorporated both variables, and whether imputation could change our decision of the best model. 
+
+Another step would be investigating the association between BMI and women from different racial backgrounds. In addition to race, the new model will incorporate age, socioeconomic level, and educational level. This way, we can observe if having a different race impacts BMI levels when all other relative factors (age, socioeconomic level, and educational level) are constant. We would also include women from various states to make the sample representative of the US women population.  
+
+
+## Reflection
+
+When we first loaded the raw data set, the number of observations was 445,132. After narrowing it down to my population of interest (adult women in Texas), the number of observations remained relatively high (1,164). The big sample size gave me a sense of reassurance that I have met the required number of observations for project B. However, after narrowing it down to complete cases of the variables of interest for study 2 analysis, I was left with only 565 observations. It remained above the minimum required number of observations, but I did not anticipate the significant reduction in the sample size. Had I known that I would lose a big number of observations in the process of data cleaning and management, I would have included women from multiple southern states, rather than Texas alone. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Session information
+
+```{r}
+
+sessionInfo()
+
+```
+
+
+

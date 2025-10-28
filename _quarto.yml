@@ -10,6 +10,8 @@ book:
     - index.qmd
     - intro.qmd
     - summary.qmd
+    - project_01.qmd
+    - project_02.qmd
     - references.qmd
 
 bibliography: references.bib
